@@ -3,6 +3,8 @@ package com.mixpanel.android.surveys;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.p_lucky.logbk.android.R;
+import net.p_lucky.logbk.android.lbmetrics.Survey;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
@@ -28,8 +30,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
-import com.mixpanel.android.R;
-import com.mixpanel.android.mpmetrics.Survey;
 
 /**
  * Simple, single-purpose layout for juggling question cards.

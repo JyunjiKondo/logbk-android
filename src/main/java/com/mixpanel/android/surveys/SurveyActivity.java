@@ -1,5 +1,22 @@
 package com.mixpanel.android.surveys;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+
+import net.p_lucky.logbk.android.R;
+import net.p_lucky.logbk.android.lbmetrics.InAppNotification;
+import net.p_lucky.logbk.android.lbmetrics.MPConfig;
+import net.p_lucky.logbk.android.lbmetrics.MixpanelAPI;
+import net.p_lucky.logbk.android.lbmetrics.Survey;
+import net.p_lucky.logbk.android.lbmetrics.Survey.Question;
+import net.p_lucky.logbk.android.lbmetrics.UpdateDisplayState;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -31,29 +48,12 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.mixpanel.android.R;
-import com.mixpanel.android.mpmetrics.InAppNotification;
-import com.mixpanel.android.mpmetrics.MPConfig;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
-import com.mixpanel.android.mpmetrics.Survey;
-import com.mixpanel.android.mpmetrics.Survey.Question;
-import com.mixpanel.android.mpmetrics.UpdateDisplayState;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
 /**
  * Activity used internally by Mixpanel to display surveys and inapp takeover notifications.
  *
  * You should not send Intent's directly to display this activity. Instead use
- * {@link com.mixpanel.android.mpmetrics.MixpanelAPI.People#showSurveyIfAvailable(Activity)} and
- * {@link com.mixpanel.android.mpmetrics.MixpanelAPI.People#showNotificationIfAvailable(Activity)}
+ * {@link net.p_lucky.logbk.android.lbmetrics.MixpanelAPI.People#showSurveyIfAvailable(Activity)} and
+ * {@link net.p_lucky.logbk.android.lbmetrics.MixpanelAPI.People#showNotificationIfAvailable(Activity)}
  */
 @TargetApi(14)
 public class SurveyActivity extends Activity {
