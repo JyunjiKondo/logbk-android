@@ -33,7 +33,7 @@ import android.util.Log;
  * </pre>
  *
  * <p>Once you've added the &lt;receiver&gt; tag to your manifest,
- * all calls to {@link net.p_lucky.logbk.android.lbmetrics.MixpanelAPI#track(String, org.json.JSONObject)}
+ * all calls to {@link net.p_lucky.logbk.android.lbmetrics.LogbookAPI#track(String, org.json.JSONObject)}
  * will include the user's Google Play Referrer as metadata. In addition, if
  * you include utm parameters in your link to Google Play, they will be parsed and
  * provided as individual properties in your track calls.</p>

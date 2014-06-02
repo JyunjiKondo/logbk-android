@@ -8,7 +8,7 @@ import android.os.Bundle;
 @TargetApi(14)
 class MixpanelActivityLifecycleCallbacks implements Application.ActivityLifecycleCallbacks {
 
-    public MixpanelActivityLifecycleCallbacks(MixpanelAPI mpInstance) {
+    public MixpanelActivityLifecycleCallbacks(LogbookAPI mpInstance) {
         mMpInstance = mpInstance;
     }
 
@@ -22,7 +22,7 @@ class MixpanelActivityLifecycleCallbacks implements Application.ActivityLifecycl
         mMpInstance.getPeople().showSurveyIfAvailable(activity);
     }
 
-    private final MixpanelAPI mMpInstance;
+    private final LogbookAPI mMpInstance;
 
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) { }

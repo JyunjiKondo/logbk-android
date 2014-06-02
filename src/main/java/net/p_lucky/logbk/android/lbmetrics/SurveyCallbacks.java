@@ -3,7 +3,7 @@ package net.p_lucky.logbk.android.lbmetrics;
 /**
  * For use with MixpanelAPI.checkForSurvey. SurveyCallbacks.foundSurvey() will be called when the library gets a survey from Mixpanel.
  *
- * @deprecated Use {@link net.p_lucky.logbk.android.lbmetrics.MixpanelAPI.People#getSurveyIfAvailable()} instead.
+ * @deprecated Use {@link net.p_lucky.logbk.android.lbmetrics.LogbookAPI.People#getSurveyIfAvailable()} instead.
  */
 @Deprecated
 public interface SurveyCallbacks {

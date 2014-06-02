@@ -1,6 +1,6 @@
 package net.p_lucky.logbk.android.lbmetrics;
 
-import net.p_lucky.logbk.android.lbmetrics.MixpanelAPI.InstanceProcessor;
+import net.p_lucky.logbk.android.lbmetrics.LogbookAPI.InstanceProcessor;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -19,7 +19,7 @@ import android.util.Log;
 *
 * <p>You can use GCMReciever to report Google Cloud Messaging registration identifiers
 * to Mixpanel, and to display incoming notifications from Mixpanel to
-* the device status bar. Together with {@link MixpanelAPI.People#initPushHandling(String) }
+* the device status bar. Together with {@link LogbookAPI.People#initPushHandling(String) }
 * this is the simplest way to get up and running with notifications from Mixpanel.
 *
 * <p>To enable GCMReciever in your application, add a clause like the following
@@ -60,8 +60,8 @@ import android.util.Log;
 * </pre>
 *
 * <p>Once the GCMReciever is configured, the only thing you have to do to
-* get set up Mixpanel messages is call {@link MixpanelAPI.People#identify(String) }
-* with a distinct id for your user, and call {@link MixpanelAPI.People#initPushHandling(String) }
+* get set up Mixpanel messages is call {@link LogbookAPI.People#identify(String) }
+* with a distinct id for your user, and call {@link LogbookAPI.People#initPushHandling(String) }
 * with the your Google API project identifier.
 * <pre>
 * {@code
@@ -76,11 +76,11 @@ import android.util.Log;
 * <p>If you would prefer to handle either sending a registration id to Mixpanel yourself
 * but allow GCMReciever to handle displaying Mixpanel messages, remove the
 * REGISTRATION intent from the GCMReciever {@code <reciever> } tag, and call
-* {@link MixpanelAPI.People#setPushRegistrationId(String)}
+* {@link LogbookAPI.People#setPushRegistrationId(String)}
 * in your own REGISTRATION handler.
 *
-* @see MixpanelAPI#getPeople()
-* @see MixpanelAPI.People#initPushHandling(String)
+* @see LogbookAPI#getPeople()
+* @see LogbookAPI.People#initPushHandling(String)
 * @see <a href="https://mixpanel.com/docs/people-analytics/android-push">Getting Started with Android Push Notifications</a>
 */
 public class GCMReceiver extends BroadcastReceiver {
@@ -102,17 +102,17 @@ public class GCMReceiver extends BroadcastReceiver {
             Log.e(LOGTAG, "Error when registering for GCM: " + intent.getStringExtra("error"));
         } else if (registration != null) {
             if (MPConfig.DEBUG) Log.d(LOGTAG, "Registering GCM ID: " + registration);
-            MixpanelAPI.allInstances(new InstanceProcessor() {
+            LogbookAPI.allInstances(new InstanceProcessor() {
                 @Override
-                public void process(MixpanelAPI api) {
+                public void process(LogbookAPI api) {
                     api.getPeople().setPushRegistrationId(registration);
                 }
             });
         } else if (intent.getStringExtra("unregistered") != null) {
             if (MPConfig.DEBUG) Log.d(LOGTAG, "Unregistering from GCM");
-            MixpanelAPI.allInstances(new InstanceProcessor() {
+            LogbookAPI.allInstances(new InstanceProcessor() {
                 @Override
-                public void process(MixpanelAPI api) {
+                public void process(LogbookAPI api) {
                     api.getPeople().clearPushRegistrationId();
                 }
             });

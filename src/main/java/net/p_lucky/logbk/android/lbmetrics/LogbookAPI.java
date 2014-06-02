@@ -100,7 +100,7 @@ import com.mixpanel.android.surveys.SurveyActivity;
  * @see <a href="https://mixpanel.com/docs/people-analytics/android-push">getting started with push notifications for Android</a>
  * @see <a href="https://github.com/mixpanel/sample-android-mixpanel-integration">The Mixpanel Android sample application</a>
  */
-public class MixpanelAPI {
+public class LogbookAPI {
     /**
      * String version of the library.
      */
@@ -110,7 +110,7 @@ public class MixpanelAPI {
      * You shouldn't instantiate MixpanelAPI objects directly.
      * Use MixpanelAPI.getInstance to get an instance.
      */
-    MixpanelAPI(Context context, Future<SharedPreferences> referrerPreferences, String token) {
+    LogbookAPI(Context context, Future<SharedPreferences> referrerPreferences, String token) {
         mContext = context;
         mToken = token;
         mPeople = new PeopleImpl();
@@ -161,7 +161,7 @@ public class MixpanelAPI {
      *     in the settings dialog.
      * @return an instance of MixpanelAPI associated with your project
      */
-    public static MixpanelAPI getInstance(Context context, String token) {
+    public static LogbookAPI getInstance(Context context, String token) {
         if (null == token || null == context) {
             return null;
         }
@@ -172,15 +172,15 @@ public class MixpanelAPI {
                 sReferrerPrefs = sPrefsLoader.loadPreferences(context, MPConfig.REFERRER_PREFS_NAME, null);
             }
 
-            Map <Context, MixpanelAPI> instances = sInstanceMap.get(token);
+            Map <Context, LogbookAPI> instances = sInstanceMap.get(token);
             if (null == instances) {
-                instances = new HashMap<Context, MixpanelAPI>();
+                instances = new HashMap<Context, LogbookAPI>();
                 sInstanceMap.put(token, instances);
             }
 
-            MixpanelAPI instance = instances.get(appContext);
+            LogbookAPI instance = instances.get(appContext);
             if (null == instance) {
-                instance = new MixpanelAPI(appContext, sReferrerPrefs, token);
+                instance = new LogbookAPI(appContext, sReferrerPrefs, token);
                 instances.put(appContext, instance);
             }
             return instance;
@@ -467,7 +467,7 @@ public class MixpanelAPI {
 
     /**
      * Core interface for using Mixpanel People Analytics features.
-     * You can get an instance by calling {@link MixpanelAPI#getPeople()}
+     * You can get an instance by calling {@link LogbookAPI#getPeople()}
      *
      * <p>The People object is used to update properties in a user's People Analytics record,
      * and to manage the receipt of push notifications sent via Mixpanel Engage.
@@ -505,7 +505,7 @@ public class MixpanelAPI {
      * }
      * </pre>
      *
-     * @see MixpanelAPI
+     * @see LogbookAPI
      */
     public interface People {
         /**
@@ -522,9 +522,9 @@ public class MixpanelAPI {
          *     across all platforms and devices. We recommend choosing a distinct id
          *     that is meaningful to your other systems (for example, a server-side account
          *     identifier), and using the same distinct id for both calls to People.identify
-         *     and {@link MixpanelAPI#identify(String)}
+         *     and {@link LogbookAPI#identify(String)}
          *
-         * @see MixpanelAPI#identify(String)
+         * @see LogbookAPI#identify(String)
          */
         public void identify(String distinctId);
 
@@ -723,13 +723,13 @@ public class MixpanelAPI {
          * If no calls to {@link People#identify(String)} have been made, this method will return null.
          *
          * <p>The id returned by getDistinctId is independent of the distinct id used to identify
-         * any events sent with {@link MixpanelAPI#track(String, JSONObject)}. To read and write that identifier,
-         * use {@link MixpanelAPI#identify(String)} and {@link MixpanelAPI#getDistinctId()}.
+         * any events sent with {@link LogbookAPI#track(String, JSONObject)}. To read and write that identifier,
+         * use {@link LogbookAPI#identify(String)} and {@link LogbookAPI#getDistinctId()}.
          *
          * @return The distinct id associated with updates to People Analytics
          *
          * @see People#identify(String)
-         * @see MixpanelAPI#getDistinctId()
+         * @see LogbookAPI#getDistinctId()
          */
         public String getDistinctId();
 
@@ -920,13 +920,13 @@ public class MixpanelAPI {
     // Package-level access. Used (at least) by GCMReceiver
     // when OS-level events occur.
     /* package */ interface InstanceProcessor {
-        public void process(MixpanelAPI m);
+        public void process(LogbookAPI m);
     }
 
     /* package */ static void allInstances(InstanceProcessor processor) {
         synchronized (sInstanceMap) {
-            for (final Map<Context, MixpanelAPI> contextInstances:sInstanceMap.values()) {
-                for (final MixpanelAPI instance:contextInstances.values()) {
+            for (final Map<Context, LogbookAPI> contextInstances:sInstanceMap.values()) {
+                for (final LogbookAPI instance:contextInstances.values()) {
                     processor.process(instance);
                 }
             }
@@ -1259,9 +1259,9 @@ public class MixpanelAPI {
                         Log.w(LOGTAG, e);
                     }
                 } else {
-                    MixpanelAPI.allInstances(new InstanceProcessor() {
+                    LogbookAPI.allInstances(new InstanceProcessor() {
                         @Override
-                        public void process(MixpanelAPI api) {
+                        public void process(LogbookAPI api) {
                             if (MPConfig.DEBUG) Log.d(LOGTAG, "Using existing pushId " + pushId);
                             api.getPeople().setPushRegistrationId(pushId);
                         }
@@ -1440,7 +1440,7 @@ public class MixpanelAPI {
                 private void trackNotificationSeen(InAppNotification notif) {
                     track("$campaign_delivery", notif.getCampaignProperties());
 
-                    final MixpanelAPI.People people = getPeople().withIdentity(getDistinctId());
+                    final LogbookAPI.People people = getPeople().withIdentity(getDistinctId());
                     final DateFormat dateFormat = new SimpleDateFormat(ENGAGE_DATE_FORMAT_STRING);
                     final JSONObject notifProperties = notif.getCampaignProperties();
                     try {
@@ -1534,7 +1534,7 @@ public class MixpanelAPI {
     private DecideUpdates mDecideUpdates;
 
     // Maps each token to a singleton MixpanelAPI instance
-    private static final Map<String, Map<Context, MixpanelAPI>> sInstanceMap = new HashMap<String, Map<Context, MixpanelAPI>>();
+    private static final Map<String, Map<Context, LogbookAPI>> sInstanceMap = new HashMap<String, Map<Context, LogbookAPI>>();
     private static final SharedPreferencesLoader sPrefsLoader = new SharedPreferencesLoader();
     private static Future<SharedPreferences> sReferrerPrefs;
 }
