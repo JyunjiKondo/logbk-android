@@ -1,5 +1,22 @@
 package com.mixpanel.android.surveys;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+
+import net.p_lucky.logbk.android.R;
+import net.p_lucky.logbk.android.lbmetrics.InAppNotification;
+import net.p_lucky.logbk.android.lbmetrics.MPConfig;
+import net.p_lucky.logbk.android.lbmetrics.LogbookAPI;
+import net.p_lucky.logbk.android.lbmetrics.Survey;
+import net.p_lucky.logbk.android.lbmetrics.Survey.Question;
+import net.p_lucky.logbk.android.lbmetrics.UpdateDisplayState;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -31,29 +48,12 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.mixpanel.android.R;
-import com.mixpanel.android.mpmetrics.InAppNotification;
-import com.mixpanel.android.mpmetrics.MPConfig;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
-import com.mixpanel.android.mpmetrics.Survey;
-import com.mixpanel.android.mpmetrics.Survey.Question;
-import com.mixpanel.android.mpmetrics.UpdateDisplayState;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
 /**
  * Activity used internally by Mixpanel to display surveys and inapp takeover notifications.
  *
  * You should not send Intent's directly to display this activity. Instead use
- * {@link com.mixpanel.android.mpmetrics.MixpanelAPI.People#showSurveyIfAvailable(Activity)} and
- * {@link com.mixpanel.android.mpmetrics.MixpanelAPI.People#showNotificationIfAvailable(Activity)}
+ * {@link net.p_lucky.logbk.android.lbmetrics.LogbookAPI.People#showSurveyIfAvailable(Activity)} and
+ * {@link net.p_lucky.logbk.android.lbmetrics.LogbookAPI.People#showNotificationIfAvailable(Activity)}
  */
 @TargetApi(14)
 public class SurveyActivity extends Activity {
@@ -68,7 +68,7 @@ public class SurveyActivity extends Activity {
             finish();
             return;
         }
-        mMixpanel = MixpanelAPI.getInstance(SurveyActivity.this, mUpdateDisplayState.getToken());
+        mMixpanel = LogbookAPI.getInstance(SurveyActivity.this, mUpdateDisplayState.getToken());
 
         if (isShowingInApp()) {
             onCreateInAppNotification(savedInstanceState);
@@ -311,7 +311,7 @@ public class SurveyActivity extends Activity {
                 final List<Survey.Question> questionList = survey.getQuestions();
 
                 final String answerDistinctId = mUpdateDisplayState.getDistinctId();
-                final MixpanelAPI.People people = mMixpanel.getPeople().withIdentity(answerDistinctId);
+                final LogbookAPI.People people = mMixpanel.getPeople().withIdentity(answerDistinctId);
                 people.append("$responses", survey.getCollectionId());
 
                 final UpdateDisplayState.AnswerMap answers = surveyState.getAnswers();
@@ -402,7 +402,7 @@ public class SurveyActivity extends Activity {
     private void trackSurveyAttempted() {
         final UpdateDisplayState.DisplayState.SurveyState surveyState = getSurveyState();
         final Survey survey = surveyState.getSurvey();
-        final MixpanelAPI.People people = mMixpanel.getPeople().withIdentity(mUpdateDisplayState.getDistinctId());
+        final LogbookAPI.People people = mMixpanel.getPeople().withIdentity(mUpdateDisplayState.getDistinctId());
         people.append("$surveys", survey.getId());
         people.append("$collections", survey.getCollectionId());
     }
@@ -475,7 +475,7 @@ public class SurveyActivity extends Activity {
 
     private AlertDialog mDialog;
     private CardCarouselLayout mCardHolder;
-    private MixpanelAPI mMixpanel;
+    private LogbookAPI mMixpanel;
     private View mPreviousButton;
     private View mNextButton;
     private TextView mProgressTextView;

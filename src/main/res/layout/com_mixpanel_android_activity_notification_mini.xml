@@ -8,7 +8,7 @@
     android:orientation="horizontal"
     android:visibility="gone">
     
-    <com.mixpanel.android.mpmetrics.MiniCircleImageView
+    <net.p_lucky.logbk.android.lbmetrics.MiniCircleImageView
         android:id="@+id/com_mixpanel_android_notification_image"
         android:layout_width="75dp"
         android:layout_height="match_parent"

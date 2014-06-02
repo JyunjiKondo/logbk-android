@@ -1,5 +1,6 @@
 package com.mixpanel.android.surveys;
 
+import net.p_lucky.logbk.android.R;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -16,7 +17,6 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.mixpanel.android.R;
 
 
 public class FadingImageView extends ImageView {
