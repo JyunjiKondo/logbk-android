@@ -1,15 +1,11 @@
 package net.p_lucky.logbk.android.lbmetrics;
 
-import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -100,113 +96,6 @@ public class UpdateDisplayState implements Parcelable {
             private static String HIGHLIGHT_KEY = "com.com.mixpanel.android.mpmetrics.UpdateDisplayState.InAppNotificationState.HIGHLIGHT_KEY";
         }
 
-        /**
-         * This class is intended for internal use by the Mixpanel library.
-         * Users of the library should not interact directly with this class.
-         */
-        public static final class SurveyState extends DisplayState {
-            public static final String TYPE = "SurveyState";
-
-            public static final Creator<SurveyState> CREATOR =
-                    new Creator<SurveyState>() {
-                        @Override
-                        public SurveyState createFromParcel(final Parcel source) {
-                            final Bundle read = new Bundle(SurveyState.class.getClassLoader());
-                            read.readFromParcel(source);
-                            return new SurveyState(read);
-                        }
-
-                        @Override
-                        public SurveyState[] newArray(final int size) {
-                            return new SurveyState[size];
-                        }
-                    };
-
-            public SurveyState(final Survey survey) {
-                mSurvey = survey;
-                mAnswers = new AnswerMap();
-                mHighlightColor = Color.BLACK;
-                mBackground = null;
-            }
-
-            public void setBackground(final Bitmap background) {
-                mBackground = background;
-            }
-
-            public void setHighlightColor(final int highlightColor) {
-                mHighlightColor = highlightColor;
-            }
-
-            public Bitmap getBackground() {
-                return mBackground;
-            }
-
-            public AnswerMap getAnswers() {
-                return mAnswers;
-            }
-
-            public int getHighlightColor() {
-                return mHighlightColor;
-            }
-
-            public Survey getSurvey() {
-                return mSurvey;
-            }
-
-            @Override
-            public String getType() {
-                return TYPE;
-            }
-
-            @Override
-            public int describeContents() {
-                return 0;
-            }
-
-            @Override
-            public void writeToParcel(final Parcel dest, final int flags) {
-                final Bundle out = new Bundle();
-                out.putInt(HIGHLIGHT_COLOR_BUNDLE_KEY, mHighlightColor);
-                out.putParcelable(ANSWERS_BUNDLE_KEY, mAnswers);
-
-                byte[] backgroundCompressed = null;
-                if (mBackground != null) {
-                    final ByteArrayOutputStream bs = new ByteArrayOutputStream();
-                    mBackground.compress(Bitmap.CompressFormat.PNG, 20, bs);
-                    backgroundCompressed = bs.toByteArray();
-                }
-                out.putByteArray(BACKGROUND_COMPRESSED_BUNDLE_KEY, backgroundCompressed);
-                out.putParcelable(SURVEY_BUNDLE_KEY, mSurvey);
-                dest.writeBundle(out);
-            }
-
-            private SurveyState(Bundle in) {
-                mHighlightColor = in.getInt(HIGHLIGHT_COLOR_BUNDLE_KEY);
-                mAnswers = in.getParcelable(ANSWERS_BUNDLE_KEY);
-
-                final byte[] backgroundCompressed = in.getByteArray(BACKGROUND_COMPRESSED_BUNDLE_KEY);
-                if (null != backgroundCompressed) {
-                    mBackground = BitmapFactory.decodeByteArray(backgroundCompressed, 0, backgroundCompressed.length);
-                } else {
-                    mBackground = null;
-                }
-
-                mSurvey = in.getParcelable(SURVEY_BUNDLE_KEY);
-            }
-
-            private final Survey mSurvey;
-            private final AnswerMap mAnswers;
-
-            // TODO need to think about threading here...
-            private Bitmap mBackground;
-            private int mHighlightColor;
-
-            private static final String SURVEY_BUNDLE_KEY = "com.mixpanel.android.mpmetrics.UpdateDisplayState.SURVEY_BUNDLE_KEY";
-            private static final String HIGHLIGHT_COLOR_BUNDLE_KEY = "com.mixpanel.android.mpmetrics.UpdateDisplayState.HIGHLIGHT_COLOR_BUNDLE_KEY";
-            private static final String ANSWERS_BUNDLE_KEY = "com.mixpanel.android.mpmetrics.UpdateDisplayState.ANSWERS_BUNDLE_KEY";
-            private static final String BACKGROUND_COMPRESSED_BUNDLE_KEY = "com.mixpanel.android.mpmetrics.UpdateDisplayState.BACKGROUND_COMPRESSED_BUNDLE_KEY";
-        }
-
         public static final Creator<DisplayState> CREATOR =
                 new Creator<DisplayState>() {
                     @Override
@@ -217,8 +106,6 @@ public class UpdateDisplayState implements Parcelable {
                         final Bundle implementation = read.getBundle(STATE_IMPL_KEY);
                         if (InAppNotificationState.TYPE.equals(type)) {
                             return new InAppNotificationState(implementation);
-                        } else if (SurveyState.TYPE.equals(type)) {
-                            return new SurveyState(implementation);
                         } else {
                             throw new RuntimeException("Unrecognized display state type " + type);
                         }

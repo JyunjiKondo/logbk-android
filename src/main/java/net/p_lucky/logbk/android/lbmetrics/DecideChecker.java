@@ -1,16 +1,5 @@
 package net.p_lucky.logbk.android.lbmetrics;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
-import android.view.Display;
-import android.view.WindowManager;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -19,14 +8,23 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
+
 /* package */ class DecideChecker {
 
     /* package */ static class Result {
         public Result() {
-            surveys = new ArrayList<Survey>();
             notifications = new ArrayList<InAppNotification>();
         }
-        public final List<Survey> surveys;
         public final List<InAppNotification> notifications;
     }
 
@@ -48,7 +46,7 @@ import java.util.List;
                 itr.remove();
             } else {
                 final Result result = runDecideCheck(updates.getToken(), updates.getDistinctId(), poster);
-                updates.reportResults(result.surveys, result.notifications);
+                updates.reportResults(result.notifications);
             }
         }
     }
@@ -87,29 +85,6 @@ import java.util.List;
         } catch (final JSONException e) {
             Log.e(LOGTAG, "Mixpanel endpoint returned unparsable result:\n" + responseString, e);
             return ret;
-        }
-
-        JSONArray surveys = null;
-        if (response.has("surveys")) {
-            try {
-                surveys = response.getJSONArray("surveys");
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Mixpanel endpoint returned non-array JSON for surveys: " + response);
-            }
-        }
-
-        if (null != surveys) {
-            for (int i = 0; i < surveys.length(); i++) {
-                try {
-                    final JSONObject surveyJson = surveys.getJSONObject(i);
-                    final Survey survey = new Survey(surveyJson);
-                    ret.surveys.add(survey);
-                } catch (final JSONException e) {
-                    Log.e(LOGTAG, "Received a strange response from surveys service: " + surveys.toString());
-                } catch (final BadDecideObjectException e) {
-                    Log.e(LOGTAG, "Received a strange response from surveys service: " + surveys.toString());
-                }
-            }
         }
 
         JSONArray notifications = null;

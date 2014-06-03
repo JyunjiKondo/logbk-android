@@ -18,9 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
         mDistinctId = distinctId;
 
         mListener = listener;
-        mUnseenSurveys = new LinkedList<Survey>();
         mUnseenNotifications = new LinkedList<InAppNotification>();
-        mSurveyIds = new HashSet<Integer>();
         mNotificationIds = new HashSet<Integer>();
         mIsDestroyed = new AtomicBoolean(false);
     }
@@ -42,17 +40,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
     }
 
     // Do not consult destroyed status inside of this method.
-    public synchronized void reportResults(List<Survey> newSurveys, List<InAppNotification> newNotifications) {
+    public synchronized void reportResults(List<InAppNotification> newNotifications) {
         boolean newContent = false;
-
-        for (final Survey s: newSurveys) {
-            final int id = s.getId();
-            if (! mSurveyIds.contains(id)) {
-                mSurveyIds.add(id);
-                mUnseenSurveys.add(s);
-                newContent = true;
-            }
-        }
 
         for (final InAppNotification n: newNotifications) {
             final int id = n.getId();
@@ -66,34 +55,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
         if (newContent && hasUpdatesAvailable() && null != mListener) {
             mListener.onNewResults(getDistinctId());
         }
-    }
-
-    public synchronized Survey getSurvey(boolean replace) {
-        if (mUnseenSurveys.isEmpty()) {
-            return null;
-        }
-        Survey s = mUnseenSurveys.remove(0);
-        if (replace) {
-            mUnseenSurveys.add(mUnseenSurveys.size(), s);
-        }
-        return s;
-    }
-
-    public synchronized Survey getSurvey(int id, boolean replace) {
-        if (mUnseenSurveys == null) {
-            return null;
-        }
-        Survey survey = null;
-        for (int i = 0; i < mUnseenSurveys.size(); i++) {
-            if (mUnseenSurveys.get(i).getId() == id) {
-                survey = mUnseenSurveys.get(i);
-                if (!replace) {
-                    mUnseenSurveys.remove(i);
-                }
-                break;
-            }
-        }
-        return survey;
     }
 
     public synchronized InAppNotification getNotification(boolean replace) {
@@ -125,14 +86,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
     }
 
     public synchronized boolean hasUpdatesAvailable() {
-        return (! mUnseenNotifications.isEmpty()) || (! mUnseenSurveys.isEmpty());
+        return (! mUnseenNotifications.isEmpty());
     }
 
     private final String mToken;
     private final String mDistinctId;
-    private final Set<Integer> mSurveyIds;
     private final Set<Integer> mNotificationIds;
-    private final List<Survey> mUnseenSurveys;
     private final List<InAppNotification> mUnseenNotifications;
     private final OnNewResultsListener mListener;
     private final AtomicBoolean mIsDestroyed;

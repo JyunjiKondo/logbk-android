@@ -12,30 +12,21 @@ import java.util.TimeZone;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.locks.ReentrantLock;
-
-import net.p_lucky.logbk.android.R;
-import net.p_lucky.logbk.android.util.ActivityImageUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Application;
-import android.app.FragmentTransaction;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.os.Build;
 import android.util.Log;
-
-import com.mixpanel.android.surveys.SurveyActivity;
 
 /**
  * Core class for interacting with Mixpanel Analytics.
@@ -734,62 +725,6 @@ public class LogbookAPI {
         public String getDistinctId();
 
         /**
-         * If a survey is currently available, this method will launch an activity that shows a
-         * survey to the user and then send the responses to Mixpanel.
-         *
-         * <p>The survey activity will use the root of the given view to take a screenshot
-         * for its background.
-         *
-         * <p>It is safe to call this method any time you want to potentially display an in app notification.
-         * This method will be a no-op if there is already a survey or in app notification being displayed.
-         * Thus, if you have both surveys and in app notification campaigns built in Mixpanel, you may call
-         * both this and {@link People#showNotificationIfAvailable(Activity)} right after each other, and
-         * only one of them will be displayed.
-         *
-         * <p>This method is a no-op in environments with
-         * Android API before Ice Cream Sandwich/API level 14.
-         *
-         * @param parent the Activity that this Survey will be displayed on top of. A snapshot will be
-         * taken of parent to be used as a blurred background.
-         */
-        public void showSurveyIfAvailable(Activity parent);
-
-        /**
-         * Shows an in app notification to the user if one is available. If the notification
-         * is a mini notification, this method will attach and remove a Fragment to parent.
-         * The lifecycle of the Fragment will be handled entirely by the Mixpanel library.
-         *
-         * <p>If the notification is a takeover notification, a SurveyActivity will be launched to
-         * display the Takeover notification.
-         *
-         * <p>It is safe to call this method any time you want to potentially display an in app notification.
-         * This method will be a no-op if there is already a survey or in app notification being displayed.
-         * Thus, if you have both surveys and in app notification campaigns built in Mixpanel, you may call
-         * both this and {@link People#showSurveyIfAvailable(Activity)} right after each other, and
-         * only one of them will be displayed.
-         *
-         * <p>This method is a no-op in environments with
-         * Android API before Ice Cream Sandwich/API level 14.
-         *
-         * @param parent the Activity that the mini notification will be displayed in, or the Activity
-         * that will be used to launch SurveyActivity for the takeover notification.
-         */
-        public void showNotificationIfAvailable(Activity parent);
-
-        /**
-         * Returns a Survey object if one is available and being held by the library, or null if
-         * no survey is currently available. Callers who want to display surveys with their own UI
-         * should call this method to get the Survey data. A given survey will be returned only once
-         * from this method, so callers should be ready to consume any non-null return value.
-         *
-         * <p>This function will always return quickly, and will not cause any communication with
-         * Mixpanel's servers, so it is safe to call this from the UI thread.
-         *
-         * @return a Survey object if one is available, null otherwise.
-         */
-        public Survey getSurveyIfAvailable();
-
-        /**
          * Returns an InAppNotification object if one is available and being held by the library, or null if
          * no survey is currently available. Callers who want to display in app notifications should call this
          * method periodically. A given InAppNotification will be returned only once from this method, so callers
@@ -801,26 +736,6 @@ public class LogbookAPI {
          * @return an InAppNotification object if one is available, null otherwise.
          */
         public InAppNotification getNotificationIfAvailable();
-
-        /**
-         * Shows a survey identified by id. The behavior of this is otherwise identical to
-         * {@link People#showSurveyIfAvailable(Activity)}.
-         *
-         * @param id the id of the Survey you wish to show.
-         * @param parent the Activity that this Survey will be displayed on top of. A snapshot will be
-         * taken of parent to be used as a blurred background.
-         */
-        public void showSurveyById(int id, final Activity parent);
-
-        /**
-         * Shows an in app notification identified by id. The behavior of this is otherwise identical to
-         * {@link People#showNotificationIfAvailable(Activity)}.
-         *
-         * @param id the id of the InAppNotification you wish to show.
-         * @param parent  the Activity that the mini notification will be displayed in, or the Activity
-         * that will be used to launch SurveyActivity for the takeover notification.
-         */
-        public void showNotificationById(int id, final Activity parent);
 
         /**
          * Return an instance of Mixpanel people with a temporary distinct id.
@@ -852,24 +767,6 @@ public class LogbookAPI {
          * @param listener the listener to add
          */
         public void removeOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener);
-
-        /**
-         * @deprecated Use showSurveyIfAvailable() instead.
-         */
-        @Deprecated
-        public void showSurvey(Survey s, Activity parent);
-
-        /**
-         * @deprecated Use getSurveyIfAvailable() instead.
-         */
-        @Deprecated
-        public void checkForSurvey(SurveyCallbacks callbacks);
-
-        /**
-         * @deprecated Use getSurveyIfAvailable() instead.
-         */
-        @Deprecated
-        public void checkForSurvey(SurveyCallbacks callbacks, Activity parent);
     }
 
     /**
@@ -1103,79 +1000,11 @@ public class LogbookAPI {
         }
 
         @Override
-        @Deprecated
-        public void checkForSurvey(final SurveyCallbacks callbacks) {
-            if (null == callbacks) {
-                Log.i(LOGTAG, "Skipping survey check because callback is null.");
-                return;
-            }
-
-            final Survey found = getSurveyIfAvailable();
-            callbacks.foundSurvey(found);
-        }
-
-        @Override
-        @Deprecated
-        public void checkForSurvey(final SurveyCallbacks callbacks, final Activity parentActivity) {
-            // Originally this call pre-computed UI chrome while it was waiting for the check to run.
-            // Since modern checks run asynchronously, it's useless nowdays.
-            checkForSurvey(callbacks);
-        }
-
-        @Override
         public InAppNotification getNotificationIfAvailable() {
             if (null == getDistinctId()) {
                 return null;
             }
             return mDecideUpdates.getNotification(mConfig.getTestMode());
-        }
-
-        @Override
-        public Survey getSurveyIfAvailable() {
-            if (null == getDistinctId()) {
-                return null;
-            }
-            return mDecideUpdates.getSurvey(mConfig.getTestMode());
-        }
-
-        @Override
-        @Deprecated
-        public void showSurvey(final Survey survey, final Activity parent) {
-            showGivenOrAvailableSurvey(survey, parent);
-        }
-
-        @Override
-        public void showSurveyIfAvailable(final Activity parent) {
-            if (Build.VERSION.SDK_INT < 14) {
-                return;
-            }
-
-            showGivenOrAvailableSurvey(null, parent);
-        }
-
-        @Override
-        public void showSurveyById(int id, final Activity parent) {
-            Survey s = mDecideUpdates.getSurvey(id, mConfig.getTestMode());
-            if (s != null) {
-                showGivenOrAvailableSurvey(s, parent);
-            }
-        }
-
-        @Override
-        public void showNotificationIfAvailable(final Activity parent) {
-            if (Build.VERSION.SDK_INT < 14) {
-                return;
-            }
-
-            showGivenOrAvailableNotification(null, parent);
-        }
-
-        @Override
-        public void showNotificationById(int id, final Activity parent) {
-            InAppNotification notif = mDecideUpdates.getNotification(id, mConfig.getTestMode());
-            if (notif != null) {
-                showGivenOrAvailableNotification(notif, parent);
-            }
         }
 
         @Override
@@ -1317,141 +1146,6 @@ public class LogbookAPI {
                 }
 
                 return dataObj;
-        }
-
-        private void showGivenOrAvailableSurvey(final Survey surveyOrNull, final Activity parent) {
-            // Showing surveys is not supported before Ice Cream Sandwich
-            if (Build.VERSION.SDK_INT < 14) {
-                return;
-            }
-
-            if (! ConfigurationChecker.checkSurveyActivityAvailable(parent.getApplicationContext())) {
-                return;
-            }
-
-            BackgroundCapture.OnBackgroundCapturedListener listener = null;
-            final ReentrantLock lock = UpdateDisplayState.getLockObject();
-            lock.lock();
-            try {
-                if (UpdateDisplayState.hasCurrentProposal()) {
-                    return; // Already being used.
-                }
-                Survey toShow = surveyOrNull;
-                if (null == toShow) {
-                    toShow = getSurveyIfAvailable();
-                }
-                if (null == toShow) {
-                    return; // Nothing to show
-                }
-
-                final UpdateDisplayState.DisplayState.SurveyState surveyDisplay =
-                        new UpdateDisplayState.DisplayState.SurveyState(toShow);
-
-                final int intentId = UpdateDisplayState.proposeDisplay(surveyDisplay, getDistinctId(), mToken);
-                assert intentId > 0; // Since we hold the lock, and !hasCurrentProposal
-
-                listener = new BackgroundCapture.OnBackgroundCapturedListener() {
-                    @Override
-                    public void onBackgroundCaptured(Bitmap bitmapCaptured, int highlightColorCaptured) {
-                        surveyDisplay.setBackground(bitmapCaptured);
-                        surveyDisplay.setHighlightColor(highlightColorCaptured);
-
-                        final Intent surveyIntent = new Intent(parent.getApplicationContext(), SurveyActivity.class);
-                        surveyIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        surveyIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        surveyIntent.putExtra(SurveyActivity.INTENT_ID_KEY, intentId);
-                        parent.startActivity(surveyIntent);
-                    }
-                };
-            } finally {
-                lock.unlock();
-            }
-
-            assert listener != null;
-            BackgroundCapture.captureBackground(parent, listener);
-        }
-
-        private void showGivenOrAvailableNotification(final InAppNotification notifOrNull, final Activity parent) {
-            if (Build.VERSION.SDK_INT < 14) {
-                return;
-            }
-
-            parent.runOnUiThread(new Runnable() {
-                @Override
-                @TargetApi(14)
-                public void run() {
-                    final ReentrantLock lock = UpdateDisplayState.getLockObject();
-                    lock.lock();
-                    try {
-                        if (UpdateDisplayState.hasCurrentProposal()) {
-                            return; // Already being used.
-                        }
-
-                        InAppNotification toShow = notifOrNull;
-                        if (null == toShow) {
-                            toShow = getNotificationIfAvailable();
-                        }
-                        if (null == toShow) {
-                            return; // Nothing to show
-                        }
-
-                        final InAppNotification.Type inAppType = toShow.getType();
-                        if (inAppType == InAppNotification.Type.TAKEOVER && ! ConfigurationChecker.checkSurveyActivityAvailable(parent.getApplicationContext())) {
-                            return; // Can't show due to config.
-                        }
-
-                        final int highlightColor = ActivityImageUtils.getHighlightColorFromBackground(parent);
-                        final UpdateDisplayState.DisplayState.InAppNotificationState proposal =
-                                new UpdateDisplayState.DisplayState.InAppNotificationState(toShow, highlightColor);
-                        final int intentId = UpdateDisplayState.proposeDisplay(proposal, getDistinctId(), mToken);
-                        assert intentId > 0; // Since we're holding the lock and !hasCurrentProposal
-
-                        switch (inAppType) {
-                            case MINI: {
-                                final UpdateDisplayState claimed = UpdateDisplayState.claimDisplayState(intentId);
-                                InAppFragment inapp = new InAppFragment();
-                                inapp.setDisplayState(intentId, (UpdateDisplayState.DisplayState.InAppNotificationState) claimed.getDisplayState());
-                                inapp.setRetainInstance(true);
-                                FragmentTransaction transaction = parent.getFragmentManager().beginTransaction();
-                                transaction.setCustomAnimations(0, R.anim.com_mixpanel_android_slide_down);
-                                transaction.add(android.R.id.content, inapp);
-                                transaction.commit();
-                            }
-                            break;
-                            case TAKEOVER: {
-                                final Intent intent = new Intent(parent.getApplicationContext(), SurveyActivity.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                                intent.putExtra(SurveyActivity.INTENT_ID_KEY, intentId);
-                                parent.startActivity(intent);
-                            }
-                            break;
-                            default:
-                                Log.e(LOGTAG, "Unrecognized notification type " + inAppType + " can't be shown");
-                        }
-                        if (!mConfig.getTestMode()) {
-                            trackNotificationSeen(toShow);
-                        }
-                    } finally {
-                        lock.unlock();
-                    }
-                } // run()
-
-                private void trackNotificationSeen(InAppNotification notif) {
-                    track("$campaign_delivery", notif.getCampaignProperties());
-
-                    final LogbookAPI.People people = getPeople().withIdentity(getDistinctId());
-                    final DateFormat dateFormat = new SimpleDateFormat(ENGAGE_DATE_FORMAT_STRING);
-                    final JSONObject notifProperties = notif.getCampaignProperties();
-                    try {
-                        notifProperties.put("$time", dateFormat.format(new Date()));
-                    } catch (JSONException e) {
-                        Log.e(LOGTAG, "Exception trying to track an in app notification seen", e);
-                    }
-                    people.append("$campaigns", notif.getId());
-                    people.append("$notifications", notifProperties);
-                }
-            });
         }
     }// PeopleImpl
 

@@ -37,20 +37,14 @@ public class MPConfig {
     /* package */ MPConfig(Bundle metaData) {
         DEBUG = metaData.getBoolean("com.mixpanel.android.MPConfig.EnableDebugLogging", false);
 
-        if (metaData.containsKey("com.mixpanel.android.MPConfig.AutoCheckForSurveys")) {
-            Log.w(LOGTAG, "com.mixpanel.android.MPConfig.AutoCheckForSurveys has been deprecated in favor of " +
-                          "com.mixpanel.android.MPConfig.AutoShowMixpanelUpdates. Please update this key as soon as possible.");
-        }
-
         mBulkUploadLimit = metaData.getInt("com.mixpanel.android.MPConfig.BulkUploadLimit", 40); // 40 records default
         mFlushInterval = metaData.getInt("com.mixpanel.android.MPConfig.FlushInterval", 60 * 1000); // one minute default
         mDataExpiration = metaData.getInt("com.mixpanel.android.MPConfig.DataExpiration",  1000 * 60 * 60 * 24 * 5); // 5 days default
         mDisableFallback = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableFallback", true);
 
          // Disable if EITHER of these is present and false, otherwise enable
-        boolean surveysAutoCheck = metaData.getBoolean("com.mixpanel.android.MPConfig.AutoCheckForSurveys", true);
         boolean mixpanelUpdatesAutoShow = metaData.getBoolean("com.mixpanel.android.MPConfig.AutoShowMixpanelUpdates", true);
-        mAutoShowMixpanelUpdates = surveysAutoCheck && mixpanelUpdatesAutoShow;
+        mAutoShowMixpanelUpdates = mixpanelUpdatesAutoShow;
 
         mTestMode = metaData.getBoolean("com.mixpanel.android.MPConfig.TestMode", false);
 

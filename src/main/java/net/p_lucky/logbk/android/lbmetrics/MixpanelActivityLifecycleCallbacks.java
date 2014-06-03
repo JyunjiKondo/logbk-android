@@ -9,7 +9,6 @@ import android.os.Bundle;
 class MixpanelActivityLifecycleCallbacks implements Application.ActivityLifecycleCallbacks {
 
     public MixpanelActivityLifecycleCallbacks(LogbookAPI mpInstance) {
-        mMpInstance = mpInstance;
     }
 
     @Override
@@ -17,12 +16,7 @@ class MixpanelActivityLifecycleCallbacks implements Application.ActivityLifecycl
         if (!activity.isTaskRoot()) {
             return; // No checks, no nothing.
         }
-
-        mMpInstance.getPeople().showNotificationIfAvailable(activity);
-        mMpInstance.getPeople().showSurveyIfAvailable(activity);
     }
-
-    private final LogbookAPI mMpInstance;
 
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) { }
