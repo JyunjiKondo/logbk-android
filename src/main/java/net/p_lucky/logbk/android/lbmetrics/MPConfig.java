@@ -42,12 +42,6 @@ public class MPConfig {
         mDataExpiration = metaData.getInt("com.mixpanel.android.MPConfig.DataExpiration",  1000 * 60 * 60 * 24 * 5); // 5 days default
         mDisableFallback = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableFallback", true);
 
-         // Disable if EITHER of these is present and false, otherwise enable
-        boolean mixpanelUpdatesAutoShow = metaData.getBoolean("com.mixpanel.android.MPConfig.AutoShowMixpanelUpdates", true);
-        mAutoShowMixpanelUpdates = mixpanelUpdatesAutoShow;
-
-        mTestMode = metaData.getBoolean("com.mixpanel.android.MPConfig.TestMode", false);
-
         String eventsEndpoint = metaData.getString("com.mixpanel.android.MPConfig.EventsEndpoint");
         if (null == eventsEndpoint) {
             eventsEndpoint = "https://api.mixpanel.com/track?ip=1";
@@ -87,13 +81,11 @@ public class MPConfig {
         if (DEBUG) {
             Log.d(LOGTAG,
                 "Mixpanel configured with:\n" +
-                "    AutoShowMixpanelUpdates " + getAutoShowMixpanelUpdates() + "\n" +
                 "    BulkUploadLimit " + getBulkUploadLimit() + "\n" +
                 "    FlushInterval " + getFlushInterval() + "\n" +
                 "    DataExpiration " + getDataExpiration() + "\n" +
                 "    DisableFallback " + getDisableFallback() + "\n" +
                 "    EnableDebugLogging " + DEBUG + "\n" +
-                "    TestMode " + getTestMode() + "\n" +
                 "    EventsEndpoint " + getEventsEndpoint() + "\n" +
                 "    PeopleEndpoint " + getPeopleEndpoint() + "\n" +
                 "    DecideEndpoint " + getDecideEndpoint() + "\n" +
@@ -121,10 +113,6 @@ public class MPConfig {
 
     public boolean getDisableFallback() {
         return mDisableFallback;
-    }
-
-    public boolean getTestMode() {
-        return mTestMode;
     }
 
     // Preferred URL for tracking events
@@ -157,11 +145,6 @@ public class MPConfig {
         return mDecideFallbackEndpoint;
     }
 
-    // Check for and show eligible surveys and in app notifications on Activity changes
-    public boolean getAutoShowMixpanelUpdates() {
-        return mAutoShowMixpanelUpdates;
-    }
-
     ///////////////////////////////////////////////
 
     // Package access for testing only- do not call directly in library code
@@ -183,14 +166,12 @@ public class MPConfig {
     private final int mFlushInterval;
     private final int mDataExpiration;
     private final boolean mDisableFallback;
-    private final boolean mTestMode;
     private final String mEventsEndpoint;
     private final String mEventsFallbackEndpoint;
     private final String mPeopleEndpoint;
     private final String mPeopleFallbackEndpoint;
     private final String mDecideEndpoint;
     private final String mDecideFallbackEndpoint;
-    private final boolean mAutoShowMixpanelUpdates;
 
     private static MPConfig sInstance;
     private static final Object sInstanceLock = new Object();

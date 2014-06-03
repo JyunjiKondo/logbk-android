@@ -30,71 +30,6 @@ public class UpdateDisplayState implements Parcelable {
 
         public abstract String getType();
 
-        /**
-         * This class is intended for internal use by the Mixpanel library.
-         * Users of the library should not interact directly with this class.
-         */
-        public static final class InAppNotificationState extends DisplayState {
-            public static final String TYPE = "InAppNotificationState";
-
-            public static final Creator<InAppNotificationState> CREATOR =
-                    new Creator<InAppNotificationState>() {
-
-                        @Override
-                        public InAppNotificationState createFromParcel(final Parcel source) {
-                            final Bundle read = new Bundle(InAppNotificationState.class.getClassLoader());
-                            read.readFromParcel(source);
-                            return new InAppNotificationState(read);
-                        }
-
-                        @Override
-                        public InAppNotificationState[] newArray(final int size) {
-                            return new InAppNotificationState[size];
-                        }
-                    };
-
-            public InAppNotificationState(InAppNotification notification, int highlightColor) {
-                mInAppNotification = notification;
-                mHighlightColor = highlightColor;
-            }
-
-            public int getHighlightColor() {
-                return mHighlightColor;
-            }
-
-            public InAppNotification getInAppNotification() {
-                return mInAppNotification;
-            }
-
-            @Override
-            public String getType() {
-                return TYPE;
-            }
-
-            @Override
-            public int describeContents() {
-                return 0;
-            }
-
-            @Override
-            public void writeToParcel(final Parcel dest, final int flags) {
-                final Bundle write = new Bundle();
-                write.putParcelable(INAPP_KEY, mInAppNotification);
-                write.putInt(HIGHLIGHT_KEY, mHighlightColor);
-                dest.writeBundle(write);
-            }
-
-            private InAppNotificationState(Bundle in) {
-                mInAppNotification = in.getParcelable(INAPP_KEY);
-                mHighlightColor = in.getInt(HIGHLIGHT_KEY);
-            }
-
-            private final InAppNotification mInAppNotification;
-            private final int mHighlightColor;
-
-            private static String INAPP_KEY = "com.com.mixpanel.android.mpmetrics.UpdateDisplayState.InAppNotificationState.INAPP_KEY";
-            private static String HIGHLIGHT_KEY = "com.com.mixpanel.android.mpmetrics.UpdateDisplayState.InAppNotificationState.HIGHLIGHT_KEY";
-        }
 
         public static final Creator<DisplayState> CREATOR =
                 new Creator<DisplayState>() {
@@ -103,12 +38,7 @@ public class UpdateDisplayState implements Parcelable {
                         final Bundle read = new Bundle(DisplayState.class.getClassLoader());
                         read.readFromParcel(source);
                         final String type = read.getString(STATE_TYPE_KEY);
-                        final Bundle implementation = read.getBundle(STATE_IMPL_KEY);
-                        if (InAppNotificationState.TYPE.equals(type)) {
-                            return new InAppNotificationState(implementation);
-                        } else {
-                            throw new RuntimeException("Unrecognized display state type " + type);
-                        }
+                        throw new RuntimeException("Unrecognized display state type " + type);
                     }
 
                     @Override

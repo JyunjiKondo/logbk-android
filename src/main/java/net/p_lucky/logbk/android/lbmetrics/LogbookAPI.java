@@ -17,11 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.annotation.TargetApi;
-import android.app.Application;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -106,7 +102,6 @@ public class LogbookAPI {
         mToken = token;
         mPeople = new PeopleImpl();
         mMessages = getAnalyticsMessages();
-        mConfig = getConfig();
         mPersistentIdentity = getPersistentIdentity(context, referrerPreferences, token);
 
         mUpdatesListener = new UpdatesListener();
@@ -118,8 +113,6 @@ public class LogbookAPI {
         if (null != peopleId) {
             mDecideUpdates = constructDecideUpdates(token, peopleId, mUpdatesListener);
         }
-
-        registerMixpanelActivityLifecycleCallbacks();
 
         if (null != mDecideUpdates) {
             mMessages.installDecideCheck(mDecideUpdates);
@@ -627,88 +620,6 @@ public class LogbookAPI {
         public void deleteUser();
 
         /**
-         * Enable end-to-end Google Cloud Messaging (GCM) from Mixpanel.
-         *
-         * <p>Calling this method will allow the Mixpanel libraries to handle GCM user
-         * registration, and enable Mixpanel to show alerts when GCM messages arrive.
-         *
-         * <p>To use {@link People#initPushHandling}, you will need to add the following to your application manifest:
-         *
-         * <pre>
-         * {@code
-         * <receiver android:name="com.mixpanel.android.mpmetrics.GCMReceiver"
-         *           android:permission="com.google.android.c2dm.permission.SEND" >
-         *     <intent-filter>
-         *         <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-         *         <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-         *         <category android:name="YOUR_PACKAGE_NAME" />
-         *     </intent-filter>
-         * </receiver>
-         * }
-         * </pre>
-         *
-         * Be sure to replace "YOUR_PACKAGE_NAME" with the name of your package. For
-         * more information and a list of necessary permissions, see {@link GCMReceiver}.
-         *
-         * <p>If you're planning to use end-to-end support for Messaging, we recommend you
-         * call this method immediately after calling {@link People#identify(String)}, likely
-         * early in your application's life cycle. (for example, in the onCreate method of your
-         * main application activity.)
-         *
-         * <p>Calls to {@link People#initPushHandling} should not be mixed with calls to
-         * {@link #setPushRegistrationId(String)} and {@link #clearPushRegistrationId()}
-         * in the same application. Application authors should choose one or the other
-         * method for handling Mixpanel GCM messages.
-         *
-         * @param senderID of the Google API Project that registered for Google Cloud Messaging
-         *     You can find your ID by looking at the URL of in your Google API Console
-         *     at https://code.google.com/apis/console/; it is the twelve digit number after
-         *     after "#project:" in the URL address bar on console pages.
-         *
-         * @see net.p_lucky.logbk.android.lbmetrics.GCMReceiver
-         * @see <a href="https://mixpanel.com/docs/people-analytics/android-push">Getting Started with Android Push Notifications</a>
-         */
-        public void initPushHandling(String senderID);
-
-        /**
-         * Manually send a Google Cloud Messaging registration id to Mixpanel.
-         *
-         * <p>If you are handling Google Cloud Messages in your own application, but would like to
-         * allow Mixpanel to handle messages originating from Mixpanel campaigns, you should
-         * call setPushRegistrationId with the "registration_id" property of the
-         * com.google.android.c2dm.intent.REGISTRATION intent when it is received.
-         *
-         * <p>setPushRegistrationId should only be called after {@link #identify(String)} has been called.
-         *
-         * <p>Calls to {@link People#setPushRegistrationId} should not be mixed with calls to {@link #initPushHandling(String)}
-         * in the same application. In addition, applications that call setPushRegistrationId
-         * should also call {@link #clearPushRegistrationId()} when they receive an intent to unregister
-         * (a com.google.android.c2dm.intent.REGISTRATION intent with getStringExtra("unregistered") != null)
-         *
-         * @param registrationId the result of calling intent.getStringExtra("registration_id")
-         *     on a com.google.android.c2dm.intent.REGISTRATION intent
-         *
-         * @see #initPushHandling(String)
-         * @see #clearPushRegistrationId()
-         */
-        public void setPushRegistrationId(String registrationId);
-
-        /**
-         * Manually clear a current Google Cloud Messaging registration id from Mixpanel.
-         *
-         * <p>If you are handling Google Cloud Messages in your own application, you should
-         * call this method when your application receives a com.google.android.c2dm.intent.REGISTRATION
-         * with getStringExtra("unregistered") != null
-         *
-         * <p>{@link People#clearPushRegistrationId} should only be called after {@link #identify(String)} has been called.
-         *
-         * <p>In general, all applications that call {@link #setPushRegistrationId(String)} should include a call to
-         * removePushRegistrationId, and no applications that call {@link #initPushHandling(String)} should
-         * call removePushRegistrationId
-         */
-        public void clearPushRegistrationId();
-
-        /**
          * Returns the string id currently being used to uniquely identify the user associated
          * with events sent using {@link People#set(String, Object)} and {@link People#increment(String, double)}.
          * If no calls to {@link People#identify(String)} have been made, this method will return null.
@@ -725,48 +636,10 @@ public class LogbookAPI {
         public String getDistinctId();
 
         /**
-         * Returns an InAppNotification object if one is available and being held by the library, or null if
-         * no survey is currently available. Callers who want to display in app notifications should call this
-         * method periodically. A given InAppNotification will be returned only once from this method, so callers
-         * should be ready to consume any non-null return value.
-         *
-         * <p>This function will return quickly, and will not cause any communication with
-         * Mixpanel's servers, so it is safe to call this from the UI thread.
-         *
-         * @return an InAppNotification object if one is available, null otherwise.
-         */
-        public InAppNotification getNotificationIfAvailable();
-
-        /**
          * Return an instance of Mixpanel people with a temporary distinct id.
          * This is used by Mixpanel Surveys but is likely not needed in your code.
          */
         public People withIdentity(String distinctId);
-
-        /**
-         * Adds a new listener that will receive a callback when new updates from Mixpanel
-         * (like surveys or in app notifications) are discovered.
-         *
-         * <p>The given listener will be called when a new batch of updates is detected. Handlers
-         * should be prepared to handle the callback on an arbitrary thread.
-         *
-         * <p>Once this listener is called, you may call {@link People#getSurveyIfAvailable()}
-         * or {@link People#getNotificationIfAvailable()}
-         * to retrieve a Survey or InAppNotification object. However, if you have multiple
-         * listeners registered, one listener may have consumed the available Survey or
-         * InAppNotification, and so the other listeners may obtain null when calling
-         * {@link People#getSurveyIfAvailable()} or {@link People#getNotificationIfAvailable()}.
-         *
-         * @param listener the listener to add
-         */
-        public void addOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener);
-
-        /**
-         * Removes a listener previously registered with addOnMixpanelUpdatesReceivedListener.
-         *
-         * @param listener the listener to add
-         */
-        public void removeOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener);
     }
 
     /**
@@ -788,30 +661,6 @@ public class LogbookAPI {
                         "    <meta-data android:name=\"com.mixpanel.android.MPConfig.EnableDebugLogging\" />\n" +
                         "    to the <application> section of your AndroidManifest.xml."
         );
-    }
-
-    /**
-     * Attempt to register MixpanelActivityLifecycleCallbacks to the application's event lifecycle.
-     * Once registered, we can automatically check for and show surveys and in app notifications
-     * when any Activity is opened.
-     *
-     * This is only available if the android version is >= 14. You can disable this by setting
-     * com.mixpanel.android.MPConfig.AutoShowMixpanelUpdates to false in your AndroidManifest.xml
-     *
-     * This function is automatically called when the library is initialized unless you explicitly
-     * set com.mixpanel.android.MPConfig.AutoShowMixpanelUpdates to false in your AndroidManifest.xml
-     */
-    /* package */
-    @TargetApi(14)
-    void registerMixpanelActivityLifecycleCallbacks() {
-        if (android.os.Build.VERSION.SDK_INT >= 14 && mConfig.getAutoShowMixpanelUpdates()) {
-            if (mContext.getApplicationContext() instanceof Application) {
-                final Application app = (Application) mContext.getApplicationContext();
-                app.registerActivityLifecycleCallbacks((new MixpanelActivityLifecycleCallbacks(this)));
-            } else {
-                if (MPConfig.DEBUG) Log.d(LOGTAG, "Context is NOT instanceof Application, AutoShowMixpanelUpdates will be disabled.");
-            }
-        }
     }
 
     // Package-level access. Used (at least) by GCMReceiver
@@ -1000,14 +849,6 @@ public class LogbookAPI {
         }
 
         @Override
-        public InAppNotification getNotificationIfAvailable() {
-            if (null == getDistinctId()) {
-                return null;
-            }
-            return mDecideUpdates.getNotification(mConfig.getTestMode());
-        }
-
-        @Override
         public void trackCharge(double amount, JSONObject properties) {
             final Date now = new Date();
             final DateFormat dateFormat = new SimpleDateFormat(ENGAGE_DATE_FORMAT_STRING);
@@ -1050,56 +891,6 @@ public class LogbookAPI {
         }
 
         @Override
-        public void setPushRegistrationId(String registrationId) {
-            if (getDistinctId() == null) {
-                return;
-            }
-            mPersistentIdentity.storePushId(registrationId);
-            try {
-                union("$android_devices", new JSONArray("[" + registrationId + "]"));
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "set push registration id error", e);
-            }
-        }
-
-        @Override
-        public void clearPushRegistrationId() {
-            mPersistentIdentity.clearPushId();
-            set("$android_devices", new JSONArray());
-        }
-
-        @Override
-        public void initPushHandling(String senderID) {
-            if (! ConfigurationChecker.checkPushConfiguration(mContext) ) {
-                Log.i(LOGTAG, "Can't start push notification service. Push notifications will not work.");
-                Log.i(LOGTAG, "See log tagged " + ConfigurationChecker.LOGTAG + " above for details.");
-            }
-            else { // Configuration is good for push notifications
-                final String pushId = mPersistentIdentity.getPushId();
-                if (pushId == null) {
-                    if (MPConfig.DEBUG) Log.d(LOGTAG, "Registering a new push id");
-
-                    try {
-                        final Intent registrationIntent = new Intent("com.google.android.c2dm.intent.REGISTER");
-                        registrationIntent.putExtra("app", PendingIntent.getBroadcast(mContext, 0, new Intent(), 0)); // boilerplate
-                        registrationIntent.putExtra("sender", senderID);
-                        mContext.startService(registrationIntent);
-                    } catch (final SecurityException e) {
-                        Log.w(LOGTAG, e);
-                    }
-                } else {
-                    LogbookAPI.allInstances(new InstanceProcessor() {
-                        @Override
-                        public void process(LogbookAPI api) {
-                            if (MPConfig.DEBUG) Log.d(LOGTAG, "Using existing pushId " + pushId);
-                            api.getPeople().setPushRegistrationId(pushId);
-                        }
-                    });
-                }
-            }// endelse
-        }
-
-        @Override
         public String getDistinctId() {
             return mPersistentIdentity.getPeopleDistinctId();
         }
@@ -1120,16 +911,6 @@ public class LogbookAPI {
                     throw new RuntimeException("This MixpanelPeople object has a fixed, constant distinctId");
                 }
             };
-        }
-
-        @Override
-        public void addOnMixpanelUpdatesReceivedListener(final OnMixpanelUpdatesReceivedListener listener) {
-            mUpdatesListener.addOnMixpanelUpdatesReceivedListener(listener);
-        }
-
-        @Override
-        public void removeOnMixpanelUpdatesReceivedListener(final OnMixpanelUpdatesReceivedListener listener) {
-            mUpdatesListener.removeOnMixpanelUpdatesReceivedListener(listener);
         }
 
         public JSONObject stdPeopleMessage(String actionType, Object properties)
@@ -1153,22 +934,6 @@ public class LogbookAPI {
         @Override
         public void onNewResults(final String distinctId) {
             mExecutor.execute(this);
-        }
-
-        public synchronized void addOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener) {
-            // Workaround for a race between checking for updates using getSurveyIfAvailable() and getNotificationIfAvailable()
-            // and registering a listener.
-            synchronized (mDecideUpdates) {
-                if (mDecideUpdates.hasUpdatesAvailable()) {
-                    onNewResults(mDecideUpdates.getDistinctId());
-                }
-            }
-
-            mListeners.add(listener);
-        }
-
-        public synchronized void removeOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener) {
-            mListeners.remove(listener);
         }
 
         public synchronized void run() {
@@ -1219,7 +984,6 @@ public class LogbookAPI {
 
     private final Context mContext;
     private final AnalyticsMessages mMessages;
-    private final MPConfig mConfig;
     private final String mToken;
     private final PeopleImpl mPeople;
     private final PersistentIdentity mPersistentIdentity;
