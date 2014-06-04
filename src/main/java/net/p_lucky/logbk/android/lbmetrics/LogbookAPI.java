@@ -1,27 +1,16 @@
 package net.p_lucky.logbk.android.lbmetrics;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.Build;
+import android.provider.Contacts.People;
 import android.util.Log;
 
 /**
@@ -100,23 +89,8 @@ public class LogbookAPI {
     LogbookAPI(Context context, Future<SharedPreferences> referrerPreferences, String token) {
         mContext = context;
         mToken = token;
-        mPeople = new PeopleImpl();
         mMessages = getAnalyticsMessages();
         mPersistentIdentity = getPersistentIdentity(context, referrerPreferences, token);
-
-        mUpdatesListener = new UpdatesListener();
-        mDecideUpdates = null;
-
-        // TODO this immediately forces the lazy load of the preferences, and defeats the
-        // purpose of PersistentIdentity's laziness.
-        final String peopleId = mPersistentIdentity.getPeopleDistinctId();
-        if (null != peopleId) {
-            mDecideUpdates = constructDecideUpdates(token, peopleId, mUpdatesListener);
-        }
-
-        if (null != mDecideUpdates) {
-            mMessages.installDecideCheck(mDecideUpdates);
-        }
     }
 
     /**
@@ -439,210 +413,6 @@ public class LogbookAPI {
     }
 
     /**
-     * Returns a Mixpanel.People object that can be used to set and increment
-     * People Analytics properties.
-     *
-     * @return an instance of {@link People} that you can use to update
-     *     records in Mixpanel People Analytics and manage Mixpanel Google Cloud Messaging notifications.
-     */
-    public People getPeople() {
-        return mPeople;
-    }
-
-    /**
-     * Core interface for using Mixpanel People Analytics features.
-     * You can get an instance by calling {@link LogbookAPI#getPeople()}
-     *
-     * <p>The People object is used to update properties in a user's People Analytics record,
-     * and to manage the receipt of push notifications sent via Mixpanel Engage.
-     * For this reason, it's important to call {@link #identify(String)} on the People
-     * object before you work with it. Once you call identify, the user identity will
-     * persist across stops and starts of your application, until you make another
-     * call to identify using a different id.
-     *
-     * A typical use case for the People object might look like this:
-     *
-     * <pre>
-     * {@code
-     *
-     * public class MainActivity extends Activity {
-     *      MixpanelAPI mMixpanel;
-     *
-     *      public void onCreate(Bundle saved) {
-     *          mMixpanel = MixpanelAPI.getInstance(this, "YOUR MIXPANEL API TOKEN");
-     *          mMixpanel.getPeople().identify("A UNIQUE ID FOR THIS USER");
-     *          mMixpanel.getPeople().initPushHandling("YOUR 12 DIGIT GOOGLE SENDER API");
-     *          ...
-     *      }
-     *
-     *      public void userUpdatedJobTitle(String newTitle) {
-     *          mMixpanel.getPeople().set("Job Title", newTitle);
-     *          ...
-     *      }
-     *
-     *      public void onDestroy() {
-     *          mMixpanel.flush();
-     *          super.onDestroy();
-     *      }
-     * }
-     *
-     * }
-     * </pre>
-     *
-     * @see LogbookAPI
-     */
-    public interface People {
-        /**
-         * Associate future calls to {@link #set(JSONObject)}, {@link #increment(Map)},
-         * and {@link #initPushHandling(String)} with a particular People Analytics user.
-         *
-         * <p>All future calls to the People object will rely on this value to assign
-         * and increment properties. The user identification will persist across
-         * restarts of your application. We recommend calling
-         * People.identify as soon as you know the distinct id of the user.
-         *
-         * @param distinctId a String that uniquely identifies the user. Users identified with
-         *     the same distinct id will be considered to be the same user in Mixpanel,
-         *     across all platforms and devices. We recommend choosing a distinct id
-         *     that is meaningful to your other systems (for example, a server-side account
-         *     identifier), and using the same distinct id for both calls to People.identify
-         *     and {@link LogbookAPI#identify(String)}
-         *
-         * @see LogbookAPI#identify(String)
-         */
-        public void identify(String distinctId);
-
-        /**
-         * Sets a single property with the given name and value for this user.
-         * The given name and value will be assigned to the user in Mixpanel People Analytics,
-         * possibly overwriting an existing property with the same name.
-         *
-         * @param propertyName The name of the Mixpanel property. This must be a String, for example "Zip Code"
-         * @param value The value of the Mixpanel property. For "Zip Code", this value might be the String "90210"
-         */
-        public void set(String propertyName, Object value);
-
-        /**
-         * Set a collection of properties on the identified user all at once.
-         *
-         * @param properties a JSONObject containing the collection of properties you wish to apply
-         *      to the identified user. Each key in the JSONObject will be associated with
-         *      a property name, and the value of that key will be assigned to the property.
-         */
-        public void set(JSONObject properties);
-
-        /**
-         * Works just like {@link People#set(String, Object)}, except it will not overwrite existing property values. This is useful for properties like "First login date".
-         *
-         * @param propertyName The name of the Mixpanel property. This must be a String, for example "Zip Code"
-         * @param value The value of the Mixpanel property. For "Zip Code", this value might be the String "90210"
-         */
-        public void setOnce(String propertyName, Object value);
-
-        /**
-         * Like {@link People#set(String, Object)}, but will not set properties that already exist on a record.
-         *
-         * @param properties a JSONObject containing the collection of properties you wish to apply
-         *      to the identified user. Each key in the JSONObject will be associated with
-         *      a property name, and the value of that key will be assigned to the property.
-         */
-        public void setOnce(JSONObject properties);
-
-        /**
-         * Add the given amount to an existing property on the identified user. If the user does not already
-         * have the associated property, the amount will be added to zero. To reduce a property,
-         * provide a negative number for the value.
-         *
-         * @param name the People Analytics property that should have its value changed
-         * @param increment the amount to be added to the current value of the named property
-         *
-         * @see #increment(Map)
-         */
-        public void increment(String name, double increment);
-
-        /**
-         * Change the existing values of multiple People Analytics properties at once.
-         *
-         * <p>If the user does not already have the associated property, the amount will
-         * be added to zero. To reduce a property, provide a negative number for the value.
-         *
-         * @param properties A map of String properties names to Long amounts. Each
-         *     property associated with a name in the map will have its value changed by the given amount
-         *
-         * @see #increment(String, double)
-         */
-        public void increment(Map<String, ? extends Number> properties);
-
-        /**
-         * Appends a value to a list-valued property. If the property does not currently exist,
-         * it will be created as a list of one element. If the property does exist and doesn't
-         * currently have a list value, the append will be ignored.
-         * @param name the People Analytics property that should have it's value appended to
-         * @param value the new value that will appear at the end of the property's list
-         */
-        public void append(String name, Object value);
-
-        /**
-         * Adds values to a list-valued property only if they are not already present in the list.
-         * If the property does not currently exist, it will be created with the given list as it's value.
-         * If the property exists and is not list-valued, the union will be ignored.
-         *
-         * @param name name of the list-valued property to set or modify
-         * @param value an array of values to add to the property value if not already present
-         */
-        void union(String name, JSONArray value);
-
-        /**
-         * permanently removes the property with the given name from the user's profile
-         * @param name name of a property to unset
-         */
-        void unset(String name);
-
-        /**
-         * Track a revenue transaction for the identified people profile.
-         *
-         * @param amount the amount of money exchanged. Positive amounts represent purchases or income from the customer, negative amounts represent refunds or payments to the customer.
-         * @param properties an optional collection of properties to associate with this transaction.
-         */
-        public void trackCharge(double amount, JSONObject properties);
-
-        /**
-         * Permanently clear the whole transaction history for the identified people profile.
-         */
-        public void clearCharges();
-
-        /**
-         * Permanently deletes the identified user's record from People Analytics.
-         *
-         * <p>Calling deleteUser deletes an entire record completely. Any future calls
-         * to People Analytics using the same distinct id will create and store new values.
-         */
-        public void deleteUser();
-
-        /**
-         * Returns the string id currently being used to uniquely identify the user associated
-         * with events sent using {@link People#set(String, Object)} and {@link People#increment(String, double)}.
-         * If no calls to {@link People#identify(String)} have been made, this method will return null.
-         *
-         * <p>The id returned by getDistinctId is independent of the distinct id used to identify
-         * any events sent with {@link LogbookAPI#track(String, JSONObject)}. To read and write that identifier,
-         * use {@link LogbookAPI#identify(String)} and {@link LogbookAPI#getDistinctId()}.
-         *
-         * @return The distinct id associated with updates to People Analytics
-         *
-         * @see People#identify(String)
-         * @see LogbookAPI#getDistinctId()
-         */
-        public String getDistinctId();
-
-        /**
-         * Return an instance of Mixpanel people with a temporary distinct id.
-         * This is used by Mixpanel Surveys but is likely not needed in your code.
-         */
-        public People withIdentity(String distinctId);
-    }
-
-    /**
      * Manage verbose logging about messages sent to Mixpanel.
      *
      * <p>Under ordinary circumstances, the Mixpanel library will only send messages
@@ -692,23 +462,9 @@ public class LogbookAPI {
     }
 
     /* package */ PersistentIdentity getPersistentIdentity(final Context context, Future<SharedPreferences> referrerPreferences, final String token) {
-        final SharedPreferencesLoader.OnPrefsLoadedListener listener = new SharedPreferencesLoader.OnPrefsLoadedListener() {
-            @Override
-            public void onPrefsLoaded(SharedPreferences preferences) {
-                final JSONArray records = PersistentIdentity.waitingPeopleRecordsForSending(preferences);
-                if (null != records) {
-                    sendAllPeopleRecords(records);
-                }
-            }
-        };
-
         final String prefsName = "com.mixpanel.android.mpmetrics.MixpanelAPI_" + token;
-        final Future<SharedPreferences> storedPreferences = sPrefsLoader.loadPreferences(context, prefsName, listener);
+        final Future<SharedPreferences> storedPreferences = sPrefsLoader.loadPreferences(context, prefsName, null);
         return new PersistentIdentity(referrerPreferences, storedPreferences);
-    }
-
-    /* package */ DecideUpdates constructDecideUpdates(final String token, final String peopleId, final DecideUpdates.OnNewResultsListener listener) {
-        return new DecideUpdates(token, peopleId, listener);
     }
 
     /* package */ void clearPreferences() {
@@ -718,278 +474,14 @@ public class LogbookAPI {
         mPersistentIdentity.clearPreferences();
     }
 
-    ///////////////////////
-
-    private class PeopleImpl implements People {
-        @Override
-        public void identify(String distinctId) {
-            mPersistentIdentity.setPeopleDistinctId(distinctId);
-            if (null != mDecideUpdates && !mDecideUpdates.getDistinctId().equals(distinctId)) {
-                mDecideUpdates.destroy();
-                mDecideUpdates = null;
-            }
-
-            if (null == mDecideUpdates) {
-                mDecideUpdates = constructDecideUpdates(mToken, distinctId, mUpdatesListener);
-                mMessages.installDecideCheck(mDecideUpdates);
-            }
-            pushWaitingPeopleRecord();
-         }
-
-        @Override
-        public void set(JSONObject properties) {
-            try {
-                final JSONObject sendProperties = new JSONObject();
-                sendProperties.put("$android_lib_version", MPConfig.VERSION);
-                sendProperties.put("$android_os", "Android");
-                sendProperties.put("$android_os_version", Build.VERSION.RELEASE == null ? "UNKNOWN" : Build.VERSION.RELEASE);
-                try {
-                    PackageManager manager = mContext.getPackageManager();
-                    PackageInfo info = manager.getPackageInfo(mContext.getPackageName(), 0);
-                    sendProperties.put("$android_app_version", info.versionName);
-                } catch (PackageManager.NameNotFoundException e) {
-                    Log.e(LOGTAG, "Exception getting app version name", e);
-                }
-                sendProperties.put("$android_manufacturer", Build.MANUFACTURER == null ? "UNKNOWN" : Build.MANUFACTURER);
-                sendProperties.put("$android_brand", Build.BRAND == null ? "UNKNOWN" : Build.BRAND);
-                sendProperties.put("$android_model", Build.MODEL == null ? "UNKNOWN" : Build.MODEL);
-
-                for (final Iterator<?> iter = properties.keys(); iter.hasNext();) {
-                    final String key = (String) iter.next();
-                    sendProperties.put(key, properties.get(key));
-                }
-
-                final JSONObject message = stdPeopleMessage("$set", sendProperties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Exception setting people properties", e);
-            }
-        }
-
-        @Override
-        public void set(String property, Object value) {
-            try {
-                set(new JSONObject().put(property, value));
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "set", e);
-            }
-        }
-
-        @Override
-        public void setOnce(JSONObject properties) {
-            try {
-                final JSONObject message = stdPeopleMessage("$set_once", properties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Exception setting people properties");
-            }
-        }
-
-        @Override
-        public void setOnce(String property, Object value) {
-            try {
-                setOnce(new JSONObject().put(property, value));
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "set", e);
-            }
-        }
-
-        @Override
-        public void increment(Map<String, ? extends Number> properties) {
-            final JSONObject json = new JSONObject(properties);
-            try {
-                final JSONObject message = stdPeopleMessage("$add", json);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Exception incrementing properties", e);
-            }
-        }
-
-        @Override
-        public void increment(String property, double value) {
-            final Map<String, Double> map = new HashMap<String, Double>();
-            map.put(property, value);
-            increment(map);
-        }
-
-        @Override
-        public void append(String name, Object value) {
-            try {
-                final JSONObject properties = new JSONObject();
-                properties.put(name, value);
-                final JSONObject message = stdPeopleMessage("$append", properties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Exception appending a property", e);
-            }
-        }
-
-        @Override
-        public void union(String name, JSONArray value) {
-            try {
-                final JSONObject properties = new JSONObject();
-                properties.put(name, value);
-                final JSONObject message = stdPeopleMessage("$union", properties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Exception unioning a property");
-            }
-        }
-
-        @Override
-        public void unset(String name) {
-            try {
-                final JSONArray names = new JSONArray();
-                names.put(name);
-                final JSONObject message = stdPeopleMessage("$unset", names);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Exception unsetting a property", e);
-            }
-        }
-
-        @Override
-        public void trackCharge(double amount, JSONObject properties) {
-            final Date now = new Date();
-            final DateFormat dateFormat = new SimpleDateFormat(ENGAGE_DATE_FORMAT_STRING);
-            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-            try {
-                final JSONObject transactionValue = new JSONObject();
-                transactionValue.put("$amount", amount);
-                transactionValue.put("$time", dateFormat.format(now));
-
-                if (null != properties) {
-                    for (final Iterator<?> iter = properties.keys(); iter.hasNext();) {
-                        final String key = (String) iter.next();
-                        transactionValue.put(key, properties.get(key));
-                    }
-                }
-
-                this.append("$transactions", transactionValue);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Exception creating new charge", e);
-            }
-        }
-
-        /**
-         * Permanently clear the whole transaction history for the identified people profile.
-         */
-        @Override
-        public void clearCharges() {
-            this.unset("$transactions");
-        }
-
-        @Override
-        public void deleteUser() {
-            try {
-                final JSONObject message = stdPeopleMessage("$delete", JSONObject.NULL);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Exception deleting a user");
-            }
-        }
-
-        @Override
-        public String getDistinctId() {
-            return mPersistentIdentity.getPeopleDistinctId();
-        }
-
-        @Override
-        public People withIdentity(final String distinctId) {
-            if (null == distinctId) {
-                return null;
-            }
-            return new PeopleImpl() {
-                @Override
-                public String getDistinctId() {
-                    return distinctId;
-                }
-
-                @Override
-                public void identify(String distinctId) {
-                    throw new RuntimeException("This MixpanelPeople object has a fixed, constant distinctId");
-                }
-            };
-        }
-
-        public JSONObject stdPeopleMessage(String actionType, Object properties)
-                throws JSONException {
-                final JSONObject dataObj = new JSONObject();
-                final String distinctId = getDistinctId();
-
-                dataObj.put(actionType, properties);
-                dataObj.put("$token", mToken);
-                dataObj.put("$time", System.currentTimeMillis());
-
-                if (null != distinctId) {
-                    dataObj.put("$distinct_id", getDistinctId());
-                }
-
-                return dataObj;
-        }
-    }// PeopleImpl
-
-    private class UpdatesListener implements DecideUpdates.OnNewResultsListener, Runnable {
-        @Override
-        public void onNewResults(final String distinctId) {
-            mExecutor.execute(this);
-        }
-
-        public synchronized void run() {
-            // It's possible that by the time this has run the updates we detected are no longer
-            // present, which is ok.
-            Log.e(LOGTAG, "UPDATE RECIEVED, INFORMING " + mListeners.size() + " LISTENERS");
-            for (OnMixpanelUpdatesReceivedListener listener: mListeners) {
-                listener.onMixpanelUpdatesReceived();
-            }
-        }
-
-        private final Set<OnMixpanelUpdatesReceivedListener> mListeners = new HashSet<OnMixpanelUpdatesReceivedListener>();
-        private final Executor mExecutor = Executors.newSingleThreadExecutor();
-    }
-
     ////////////////////////////////////////////////////
 
-    private void recordPeopleMessage(JSONObject message) {
-        if (message.has("$distinct_id")) {
-           mMessages.peopleMessage(message);
-        } else {
-           mPersistentIdentity.storeWaitingPeopleRecord(message);
-        }
-    }
-
-    private void pushWaitingPeopleRecord() {
-        final JSONArray records = mPersistentIdentity.waitingPeopleRecordsForSending();
-        if (null != records) {
-            sendAllPeopleRecords(records);
-        }
-    }
-
-    // MUST BE THREAD SAFE. Called from crazy places. mPersistentIdentity may not exist
-    // when this is called (from its crazy thread)
-    private void sendAllPeopleRecords(JSONArray records) {
-        for (int i = 0; i < records.length(); i++) {
-            try {
-                final JSONObject message = records.getJSONObject(i);
-                mMessages.peopleMessage(message);
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Malformed people record stored pending identity, will not send it.", e);
-            }
-        }
-    }
-
     private static final String LOGTAG = "MixpanelAPI";
-    private static final String ENGAGE_DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss";
 
     private final Context mContext;
     private final AnalyticsMessages mMessages;
     private final String mToken;
-    private final PeopleImpl mPeople;
     private final PersistentIdentity mPersistentIdentity;
-    private final UpdatesListener mUpdatesListener;
-
-    private DecideUpdates mDecideUpdates;
 
     // Maps each token to a singleton MixpanelAPI instance
     private static final Map<String, Map<Context, LogbookAPI>> sInstanceMap = new HashMap<String, Map<Context, LogbookAPI>>();

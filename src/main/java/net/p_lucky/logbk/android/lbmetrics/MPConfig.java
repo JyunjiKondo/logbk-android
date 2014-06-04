@@ -54,30 +54,6 @@ public class MPConfig {
         }
         mEventsFallbackEndpoint = eventsFallbackEndpoint;
 
-        String peopleEndpoint = metaData.getString("com.mixpanel.android.MPConfig.PeopleEndpoint");
-        if (null == peopleEndpoint) {
-            peopleEndpoint = "https://api.mixpanel.com/engage";
-        }
-        mPeopleEndpoint = peopleEndpoint;
-
-        String peopleFallbackEndpoint = metaData.getString("com.mixpanel.android.MPConfig.PeopleFallbackEndpoint");
-        if (null == peopleFallbackEndpoint) {
-            peopleFallbackEndpoint = "http://api.mixpanel.com/engage";
-        }
-        mPeopleFallbackEndpoint = peopleFallbackEndpoint;
-
-        String decideEndpoint = metaData.getString("com.mixpanel.android.MPConfig.DecideEndpoint");
-        if (null == decideEndpoint) {
-            decideEndpoint = "https://decide.mixpanel.com/decide";
-        }
-        mDecideEndpoint = decideEndpoint;
-
-        String decideFallbackEndpoint = metaData.getString("com.mixpanel.android.MPConfig.DecideFallbackEndpoint");
-        if (null == decideFallbackEndpoint) {
-            decideFallbackEndpoint = "http://decide.mixpanel.com/decide";
-        }
-        mDecideFallbackEndpoint = decideFallbackEndpoint;
-
         if (DEBUG) {
             Log.d(LOGTAG,
                 "Mixpanel configured with:\n" +
@@ -87,11 +63,7 @@ public class MPConfig {
                 "    DisableFallback " + getDisableFallback() + "\n" +
                 "    EnableDebugLogging " + DEBUG + "\n" +
                 "    EventsEndpoint " + getEventsEndpoint() + "\n" +
-                "    PeopleEndpoint " + getPeopleEndpoint() + "\n" +
-                "    DecideEndpoint " + getDecideEndpoint() + "\n" +
-                "    EventsFallbackEndpoint " + getEventsFallbackEndpoint() + "\n" +
-                "    PeopleFallbackEndpoint " + getPeopleFallbackEndpoint() + "\n" +
-                "    DecideFallbackEndpoint " + getDecideFallbackEndpoint() + "\n"
+                "    EventsFallbackEndpoint " + getEventsFallbackEndpoint() + "\n"
             );
         }
     }
@@ -120,29 +92,9 @@ public class MPConfig {
         return mEventsEndpoint;
     }
 
-    // Preferred URL for tracking people
-    public String getPeopleEndpoint() {
-        return mPeopleEndpoint;
-    }
-
-    // Preferred URL for pulling decide data
-    public String getDecideEndpoint() {
-        return mDecideEndpoint;
-    }
-
     // Fallback URL for tracking events if post to preferred URL fails
     public String getEventsFallbackEndpoint() {
         return mEventsFallbackEndpoint;
-    }
-
-    // Fallback URL for tracking people if post to preferred URL fails
-    public String getPeopleFallbackEndpoint() {
-        return mPeopleFallbackEndpoint;
-    }
-
-    // Fallback URL for pulling decide data if preferred URL fails
-    public String getDecideFallbackEndpoint() {
-        return mDecideFallbackEndpoint;
     }
 
     ///////////////////////////////////////////////
@@ -168,10 +120,6 @@ public class MPConfig {
     private final boolean mDisableFallback;
     private final String mEventsEndpoint;
     private final String mEventsFallbackEndpoint;
-    private final String mPeopleEndpoint;
-    private final String mPeopleFallbackEndpoint;
-    private final String mDecideEndpoint;
-    private final String mDecideFallbackEndpoint;
 
     private static MPConfig sInstance;
     private static final Object sInstanceLock = new Object();
