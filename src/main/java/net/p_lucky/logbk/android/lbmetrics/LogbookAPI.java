@@ -86,11 +86,11 @@ public class LogbookAPI {
      * You shouldn't instantiate MixpanelAPI objects directly.
      * Use MixpanelAPI.getInstance to get an instance.
      */
-    LogbookAPI(Context context, Future<SharedPreferences> referrerPreferences, String token) {
+    LogbookAPI(Context context, String token) {
         mContext = context;
         mToken = token;
         mMessages = getAnalyticsMessages();
-        mPersistentIdentity = getPersistentIdentity(context, referrerPreferences, token);
+        mPersistentIdentity = getPersistentIdentity(context, token);
     }
 
     /**
@@ -126,10 +126,6 @@ public class LogbookAPI {
         synchronized (sInstanceMap) {
             final Context appContext = context.getApplicationContext();
 
-            if (null == sReferrerPrefs) {
-                sReferrerPrefs = sPrefsLoader.loadPreferences(context, MPConfig.REFERRER_PREFS_NAME, null);
-            }
-
             Map <Context, LogbookAPI> instances = sInstanceMap.get(token);
             if (null == instances) {
                 instances = new HashMap<Context, LogbookAPI>();
@@ -138,7 +134,7 @@ public class LogbookAPI {
 
             LogbookAPI instance = instances.get(appContext);
             if (null == instance) {
-                instance = new LogbookAPI(appContext, sReferrerPrefs, token);
+                instance = new LogbookAPI(appContext, token);
                 instances.put(appContext, instance);
             }
             return instance;
@@ -278,13 +274,6 @@ public class LogbookAPI {
     public void track(String eventName, JSONObject properties) {
         try {
             final JSONObject messageProps = new JSONObject();
-
-            final Map<String, String> referrerProperties = mPersistentIdentity.getReferrerProperties();
-            for (final Map.Entry<String, String> entry:referrerProperties.entrySet()) {
-                final String key = entry.getKey();
-                final String value = entry.getValue();
-                messageProps.put(key, value);
-            }
 
             final JSONObject superProperties = mPersistentIdentity.getSuperProperties();
             final Iterator<?> superIter = superProperties.keys();
@@ -461,10 +450,10 @@ public class LogbookAPI {
         return MPConfig.getInstance(mContext);
     }
 
-    /* package */ PersistentIdentity getPersistentIdentity(final Context context, Future<SharedPreferences> referrerPreferences, final String token) {
+    /* package */ PersistentIdentity getPersistentIdentity(final Context context, final String token) {
         final String prefsName = "com.mixpanel.android.mpmetrics.MixpanelAPI_" + token;
         final Future<SharedPreferences> storedPreferences = sPrefsLoader.loadPreferences(context, prefsName, null);
-        return new PersistentIdentity(referrerPreferences, storedPreferences);
+        return new PersistentIdentity(storedPreferences);
     }
 
     /* package */ void clearPreferences() {
@@ -486,5 +475,4 @@ public class LogbookAPI {
     // Maps each token to a singleton MixpanelAPI instance
     private static final Map<String, Map<Context, LogbookAPI>> sInstanceMap = new HashMap<String, Map<Context, LogbookAPI>>();
     private static final SharedPreferencesLoader sPrefsLoader = new SharedPreferencesLoader();
-    private static Future<SharedPreferences> sReferrerPrefs;
 }

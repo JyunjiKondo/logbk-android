@@ -15,9 +15,6 @@ public class MPConfig {
 
     public static boolean DEBUG = false;
 
-    // Name for persistent storage of app referral SharedPreferences
-    /* package */ static final String REFERRER_PREFS_NAME = "com.mixpanel.android.mpmetrics.ReferralInfo";
-
     // Max size of the number of notifications we will hold in memory. Since they may contain images,
     // we don't want to suck up all of the memory on the device.
     /* package */ static final int MAX_NOTIFICATION_CACHE_COUNT = 2;

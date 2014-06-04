@@ -1,8 +1,6 @@
 package net.p_lucky.logbk.android.lbmetrics;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -11,41 +9,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
 
 /* package */ class PersistentIdentity {
 
-    public static void writeReferrerPrefs(Context context, String preferencesName, Map<String, String> properties) {
-        synchronized (sReferrerPrefsLock) {
-            final SharedPreferences referralInfo = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE);
-            final SharedPreferences.Editor editor = referralInfo.edit();
-            editor.clear();
-            for (final Map.Entry<String, String> entry:properties.entrySet()) {
-                editor.putString(entry.getKey(), entry.getValue());
-            }
-            writeEdits(editor);
-            sReferrerPrefsDirty = true;
-        }
-    }
-
-    public PersistentIdentity(Future<SharedPreferences> referrerPreferences, Future<SharedPreferences> storedPreferences) {
-        mLoadReferrerPreferences = referrerPreferences;
+    public PersistentIdentity(Future<SharedPreferences> storedPreferences) {
         mLoadStoredPreferences = storedPreferences;
         mSuperPropertiesCache = null;
-        mReferrerPropertiesCache = null;
         mIdentitiesLoaded = false;
-        mReferrerChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                synchronized (sReferrerPrefsLock) {
-                    readReferrerProperties();
-                    sReferrerPrefsDirty = false;
-                }
-            }
-        };
     }
 
     public synchronized JSONObject getSuperProperties() {
@@ -53,16 +26,6 @@ import android.util.Log;
             readSuperProperties();
         }
         return mSuperPropertiesCache;
-    }
-
-    public Map<String, String> getReferrerProperties() {
-        synchronized (sReferrerPrefsLock) {
-            if (sReferrerPrefsDirty || null == mReferrerPropertiesCache) {
-                readReferrerProperties();
-                sReferrerPrefsDirty = false;
-            }
-        }
-        return mReferrerPropertiesCache;
     }
 
     public synchronized String getEventsDistinctId() {
@@ -167,28 +130,6 @@ import android.util.Log;
     }
 
     // All access should be synchronized on this
-    private void readReferrerProperties() {
-        mReferrerPropertiesCache = new HashMap<String, String>();
-
-        try {
-            final SharedPreferences referrerPrefs = mLoadReferrerPreferences.get();
-            referrerPrefs.unregisterOnSharedPreferenceChangeListener(mReferrerChangeListener);
-            referrerPrefs.registerOnSharedPreferenceChangeListener(mReferrerChangeListener);
-
-            final Map<String, ?> prefsMap = referrerPrefs.getAll();
-            for (final Map.Entry<String, ?> entry:prefsMap.entrySet()) {
-                final String prefsName = entry.getKey();
-                final Object prefsVal = entry.getValue();
-                mReferrerPropertiesCache.put(prefsName, prefsVal.toString());
-            }
-        } catch (final ExecutionException e) {
-            Log.e(LOGTAG, "Cannot load referrer properties from shared preferences.", e.getCause());
-        } catch (final InterruptedException e) {
-            Log.e(LOGTAG, "Cannot load referrer properties from shared preferences.", e);
-        }
-    }
-
-    // All access should be synchronized on this
     private void storeSuperProperties() {
         if (null == mSuperPropertiesCache) {
             Log.e(LOGTAG, "storeSuperProperties should not be called with uninitialized superPropertiesCache.");
@@ -260,14 +201,9 @@ import android.util.Log;
     }
 
     private final Future<SharedPreferences> mLoadStoredPreferences;
-    private final Future<SharedPreferences> mLoadReferrerPreferences;
-    private final SharedPreferences.OnSharedPreferenceChangeListener mReferrerChangeListener;
     private JSONObject mSuperPropertiesCache;
-    private Map<String, String> mReferrerPropertiesCache;
     private boolean mIdentitiesLoaded;
     private String mEventsDistinctId;
 
-    private static boolean sReferrerPrefsDirty = true;
-    private static final Object sReferrerPrefsLock = new Object();
     private static final String LOGTAG = "MixpanelAPI PersistentIdentity";
 }
