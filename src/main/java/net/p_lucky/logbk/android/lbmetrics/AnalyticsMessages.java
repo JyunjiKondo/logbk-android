@@ -115,12 +115,12 @@ import android.util.Log;
         return mWorker.isDead();
     }
 
-    protected MPDbAdapter makeDbAdapter(Context context) {
-        return new MPDbAdapter(context);
+    protected LBDbAdapter makeDbAdapter(Context context) {
+        return new LBDbAdapter(context);
     }
 
-    protected MPConfig getConfig(Context context) {
-        return MPConfig.getInstance(context);
+    protected LBConfig getConfig(Context context) {
+        return LBConfig.getInstance(context);
     }
 
     protected ServerMessage getPoster() {
@@ -156,7 +156,7 @@ import android.util.Log;
     // Sends a message if and only if we are running with Mixpanel Message log enabled.
     // Will be called from the Mixpanel thread.
     private void logAboutMessageToMixpanel(String message) {
-        if (MPConfig.DEBUG) {
+        if (LBConfig.DEBUG) {
             Log.d(LOGTAG, message + " (Thread " + Thread.currentThread().getId() + ")");
         }
     }
@@ -189,7 +189,7 @@ import android.util.Log;
         // NOTE that the returned worker will run FOREVER, unless you send a hard kill
         // (which you really shouldn't)
         private Handler restartWorkerThread() {
-            final HandlerThread thread = new HandlerThread("com.mixpanel.android.AnalyticsWorker", Thread.MIN_PRIORITY);
+            final HandlerThread thread = new HandlerThread("net.p_lucky.logbk.android.AnalyticsWorker", Thread.MIN_PRIORITY);
             thread.start();
             final Handler ret = new AnalyticsMessageHandler(thread.getLooper());
             return ret;
@@ -208,7 +208,7 @@ import android.util.Log;
             public void handleMessage(Message msg) {
                 if (mDbAdapter == null) {
                     mDbAdapter = makeDbAdapter(mContext);
-                    mDbAdapter.cleanupEvents(System.currentTimeMillis() - mConfig.getDataExpiration(), MPDbAdapter.Table.EVENTS);
+                    mDbAdapter.cleanupEvents(System.currentTimeMillis() - mConfig.getDataExpiration(), LBDbAdapter.Table.EVENTS);
                 }
 
                 try {
@@ -231,7 +231,7 @@ import android.util.Log;
                             final JSONObject message = prepareEventObject(eventDescription);
                             logAboutMessageToMixpanel("Queuing event for sending later");
                             logAboutMessageToMixpanel("    " + message.toString());
-                            queueDepth = mDbAdapter.addJSON(message, MPDbAdapter.Table.EVENTS);
+                            queueDepth = mDbAdapter.addJSON(message, LBDbAdapter.Table.EVENTS);
                         } catch (final JSONException e) {
                             Log.e(LOGTAG, "Exception tracking event " + eventDescription.getEventName(), e);
                         }
@@ -249,7 +249,7 @@ import android.util.Log;
                             Looper.myLooper().quit();
                         }
                     } else {
-                        Log.e(LOGTAG, "Unexpected message received by Mixpanel worker: " + msg);
+                        Log.e(LOGTAG, "Unexpected message received by Logbook worker: " + msg);
                     }
 
                     ///////////////////////////
@@ -276,7 +276,7 @@ import android.util.Log;
                         mHandler = null;
                         try {
                             Looper.myLooper().quit();
-                            Log.e(LOGTAG, "Mixpanel will not process any more analytics messages", e);
+                            Log.e(LOGTAG, "Logbook will not process any more analytics messages", e);
                         } catch (final Exception tooLate) {
                             Log.e(LOGTAG, "Could not halt looper", tooLate);
                         }
@@ -285,7 +285,7 @@ import android.util.Log;
             }// handleMessage
 
 
-            private void sendAllData(MPDbAdapter dbAdapter) {
+            private void sendAllData(LBDbAdapter dbAdapter) {
                 final ServerMessage poster = getPoster();
                 if (! poster.isOnline(mContext)) {
                     logAboutMessageToMixpanel("Not flushing data to Mixpanel because the device is not connected to the internet.");
@@ -294,14 +294,14 @@ import android.util.Log;
 
                 logAboutMessageToMixpanel("Sending records to Mixpanel");
                 if (mDisableFallback) {
-                    sendData(dbAdapter, MPDbAdapter.Table.EVENTS, new String[]{ mConfig.getEventsEndpoint() });
+                    sendData(dbAdapter, LBDbAdapter.Table.EVENTS, new String[]{ mConfig.getEventsEndpoint() });
                  } else {
-                    sendData(dbAdapter, MPDbAdapter.Table.EVENTS,
+                    sendData(dbAdapter, LBDbAdapter.Table.EVENTS,
                              new String[]{ mConfig.getEventsEndpoint(), mConfig.getEventsFallbackEndpoint() });
                 }
             }
 
-            private void sendData(MPDbAdapter dbAdapter, MPDbAdapter.Table table, String[] urls) {
+            private void sendData(LBDbAdapter dbAdapter, LBDbAdapter.Table table, String[] urls) {
                 final ServerMessage poster = getPoster();
                 final String[] eventsData = dbAdapter.generateDataString(table);
 
@@ -312,7 +312,7 @@ import android.util.Log;
                     final String encodedData = Base64Coder.encodeString(rawMessage);
                     final List<NameValuePair> params = new ArrayList<NameValuePair>(1);
                     params.add(new BasicNameValuePair("data", encodedData));
-                    if (MPConfig.DEBUG) {
+                    if (LBConfig.DEBUG) {
                         params.add(new BasicNameValuePair("verbose", "1"));
                     }
 
@@ -323,7 +323,7 @@ import android.util.Log;
                             response = poster.performRequest(url, params);
                             deleteEvents = true; // Delete events on any successful post, regardless of 1 or 0 response
                             if (null == response) {
-                                if (MPConfig.DEBUG) {
+                                if (LBConfig.DEBUG) {
                                     Log.d(LOGTAG, "Response was null, unexpected failure posting to " + url + ".");
                                 }
                             } else {
@@ -345,7 +345,7 @@ import android.util.Log;
                             Log.e(LOGTAG, "Cannot interpret " + url + " as a URL.", e);
                             break;
                         } catch (final IOException e) {
-                            if (MPConfig.DEBUG)
+                            if (LBConfig.DEBUG)
                                 Log.d(LOGTAG, "Cannot post message to " + url + ".", e);
                             deleteEvents = false;
                         }
@@ -368,7 +368,7 @@ import android.util.Log;
                 final JSONObject ret = new JSONObject();
 
                 ret.put("mp_lib", "android");
-                ret.put("$lib_version", MPConfig.VERSION);
+                ret.put("$lib_version", LBConfig.VERSION);
 
                 // For querying together with data from other libraries
                 ret.put("$os", "Android");
@@ -430,7 +430,7 @@ import android.util.Log;
                 return eventObj;
             }
 
-            private MPDbAdapter mDbAdapter;
+            private LBDbAdapter mDbAdapter;
             private long mFlushInterval; // XXX remove when associated deprecated APIs are removed
             private boolean mDisableFallback; // XXX remove when associated deprecated APIs are removed
         }// AnalyticsMessageHandler
@@ -465,7 +465,7 @@ import android.util.Log;
     // Used across thread boundaries
     private final Worker mWorker;
     private final Context mContext;
-    private final MPConfig mConfig;
+    private final LBConfig mConfig;
 
     // Messages for our thread
     private static int ENQUEUE_EVENTS = 1; // push given JSON message to events DB
@@ -475,7 +475,7 @@ import android.util.Log;
     private static int SET_FLUSH_INTERVAL = 4; // XXX REMOVE when associated deprecated APIs are removed
     private static int SET_DISABLE_FALLBACK = 10; // XXX REMOVE when associated deprecated APIs are removed
 
-    private static final String LOGTAG = "MixpanelAPI";
+    private static final String LOGTAG = "LogbookAPI";
 
     private static final Map<Context, AnalyticsMessages> sInstances = new HashMap<Context, AnalyticsMessages>();
 

@@ -10,7 +10,7 @@ import android.util.Log;
 /**
  * Stores global configuration options for the Mixpanel library.
  */
-public class MPConfig {
+public class LBConfig {
     public static final String VERSION = "4.2.1";
 
     public static boolean DEBUG = false;
@@ -20,7 +20,7 @@ public class MPConfig {
     /* package */ static final int MAX_NOTIFICATION_CACHE_COUNT = 2;
 
     // Instances are safe to store, since they're immutable and always the same.
-    public static MPConfig getInstance(Context context) {
+    public static LBConfig getInstance(Context context) {
         synchronized (sInstanceLock) {
             if (null == sInstance) {
                 final Context appContext = context.getApplicationContext();
@@ -31,21 +31,21 @@ public class MPConfig {
         return sInstance;
     }
 
-    /* package */ MPConfig(Bundle metaData) {
-        DEBUG = metaData.getBoolean("com.mixpanel.android.MPConfig.EnableDebugLogging", false);
+    /* package */ LBConfig(Bundle metaData) {
+        DEBUG = metaData.getBoolean("net.p_lucky.logbk.android.LBConfig.EnableDebugLogging", false);
 
-        mBulkUploadLimit = metaData.getInt("com.mixpanel.android.MPConfig.BulkUploadLimit", 40); // 40 records default
-        mFlushInterval = metaData.getInt("com.mixpanel.android.MPConfig.FlushInterval", 60 * 1000); // one minute default
-        mDataExpiration = metaData.getInt("com.mixpanel.android.MPConfig.DataExpiration",  1000 * 60 * 60 * 24 * 5); // 5 days default
-        mDisableFallback = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableFallback", true);
+        mBulkUploadLimit = metaData.getInt("net.p_lucky.logbk.android.LBConfig.BulkUploadLimit", 40); // 40 records default
+        mFlushInterval = metaData.getInt("net.p_lucky.logbk.android.LBConfig.FlushInterval", 60 * 1000); // one minute default
+        mDataExpiration = metaData.getInt("net.p_lucky.logbk.android.LBConfig.DataExpiration",  1000 * 60 * 60 * 24 * 5); // 5 days default
+        mDisableFallback = metaData.getBoolean("net.p_lucky.logbk.android.LBConfig.DisableFallback", true);
 
-        String eventsEndpoint = metaData.getString("com.mixpanel.android.MPConfig.EventsEndpoint");
+        String eventsEndpoint = metaData.getString("net.p_lucky.logbk.android.LBConfig.EventsEndpoint");
         if (null == eventsEndpoint) {
             eventsEndpoint = "https://api.mixpanel.com/track?ip=1";
         }
         mEventsEndpoint = eventsEndpoint;
 
-        String eventsFallbackEndpoint = metaData.getString("com.mixpanel.android.MPConfig.EventsFallbackEndpoint");
+        String eventsFallbackEndpoint = metaData.getString("net.p_lucky.logbk.android.LBConfig.EventsFallbackEndpoint");
         if (null == eventsFallbackEndpoint) {
             eventsFallbackEndpoint = "http://api.mixpanel.com/track?ip=1";
         }
@@ -53,7 +53,7 @@ public class MPConfig {
 
         if (DEBUG) {
             Log.d(LOGTAG,
-                "Mixpanel configured with:\n" +
+                "Logbook configured with:\n" +
                 "    BulkUploadLimit " + getBulkUploadLimit() + "\n" +
                 "    FlushInterval " + getFlushInterval() + "\n" +
                 "    DataExpiration " + getDataExpiration() + "\n" +
@@ -97,7 +97,7 @@ public class MPConfig {
     ///////////////////////////////////////////////
 
     // Package access for testing only- do not call directly in library code
-    /* package */ static MPConfig readConfig(Context appContext) {
+    /* package */ static LBConfig readConfig(Context appContext) {
         final String packageName = appContext.getPackageName();
         try {
             final ApplicationInfo appInfo = appContext.getPackageManager().getApplicationInfo(packageName, PackageManager.GET_META_DATA);
@@ -105,9 +105,9 @@ public class MPConfig {
             if (null == configBundle) {
                 configBundle = new Bundle();
             }
-            return new MPConfig(configBundle);
+            return new LBConfig(configBundle);
         } catch (final NameNotFoundException e) {
-            throw new RuntimeException("Can't configure Mixpanel with package name " + packageName, e);
+            throw new RuntimeException("Can't configure Logbook with package name " + packageName, e);
         }
     }
 
@@ -118,7 +118,7 @@ public class MPConfig {
     private final String mEventsEndpoint;
     private final String mEventsFallbackEndpoint;
 
-    private static MPConfig sInstance;
+    private static LBConfig sInstance;
     private static final Object sInstanceLock = new Object();
-    private static final String LOGTAG = "MixpanelAPI.MPConfig";
+    private static final String LOGTAG = "LogbookAPI.MPConfig";
 }

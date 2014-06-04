@@ -21,8 +21,8 @@ import android.util.Log;
  * by a single thread.
  *
  */
-class MPDbAdapter {
-    private static final String LOGTAG = "MixpanelAPI";
+class LBDbAdapter {
+    private static final String LOGTAG = "LogbookAPI";
 
     public enum Table {
         EVENTS ("events");
@@ -38,7 +38,7 @@ class MPDbAdapter {
         private final String mTableName;
     }
 
-    private static final String DATABASE_NAME = "mixpanel";
+    private static final String DATABASE_NAME = "logbook";
     private static final int DATABASE_VERSION = 4;
 
     public static final String KEY_DATA = "data";
@@ -52,10 +52,10 @@ class MPDbAdapter {
         "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.EVENTS.getName() +
         " (" + KEY_CREATED_AT + ");";
 
-    private final MPDatabaseHelper mDb;
+    private final LBDatabaseHelper mDb;
 
-    private static class MPDatabaseHelper extends SQLiteOpenHelper {
-        MPDatabaseHelper(Context context, String dbName) {
+    private static class LBDatabaseHelper extends SQLiteOpenHelper {
+        LBDatabaseHelper(Context context, String dbName) {
             super(context, dbName, null, DATABASE_VERSION);
             mDatabaseFile = context.getDatabasePath(dbName);
         }
@@ -70,7 +70,7 @@ class MPDbAdapter {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            if (MPConfig.DEBUG) Log.d(LOGTAG, "Creating a new Mixpanel events DB");
+            if (LBConfig.DEBUG) Log.d(LOGTAG, "Creating a new Logbook events DB");
 
             db.execSQL(CREATE_EVENTS_TABLE);
             db.execSQL(EVENTS_TIME_INDEX);
@@ -78,7 +78,7 @@ class MPDbAdapter {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            if (MPConfig.DEBUG) Log.d(LOGTAG, "Upgrading app, replacing Mixpanel events DB");
+            if (LBConfig.DEBUG) Log.d(LOGTAG, "Upgrading app, replacing Logbook events DB");
 
             db.execSQL("DROP TABLE IF EXISTS " + Table.EVENTS.getName());
             db.execSQL(CREATE_EVENTS_TABLE);
@@ -88,12 +88,12 @@ class MPDbAdapter {
         private final File mDatabaseFile;
     }
 
-    public MPDbAdapter(Context context) {
+    public LBDbAdapter(Context context) {
         this(context, DATABASE_NAME);
     }
 
-    public MPDbAdapter(Context context, String dbName) {
-        mDb = new MPDatabaseHelper(context, dbName);
+    public LBDbAdapter(Context context, String dbName) {
+        mDb = new LBDatabaseHelper(context, dbName);
     }
 
     /**

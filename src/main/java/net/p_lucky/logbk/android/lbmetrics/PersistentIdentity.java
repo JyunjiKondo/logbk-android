@@ -113,7 +113,7 @@ import android.util.Log;
         try {
             final SharedPreferences prefs = mLoadStoredPreferences.get();
             final String props = prefs.getString("super_properties", "{}");
-            if (MPConfig.DEBUG) Log.d(LOGTAG, "Loading Super Properties " + props);
+            if (LBConfig.DEBUG) Log.d(LOGTAG, "Loading Super Properties " + props);
             mSuperPropertiesCache = new JSONObject(props);
         } catch (final ExecutionException e) {
             Log.e(LOGTAG, "Cannot load superProperties from SharedPreferences.", e.getCause());
@@ -137,7 +137,7 @@ import android.util.Log;
         }
 
         final String props = mSuperPropertiesCache.toString();
-        if (MPConfig.DEBUG) Log.d(LOGTAG, "Storing Super Properties " + props);
+        if (LBConfig.DEBUG) Log.d(LOGTAG, "Storing Super Properties " + props);
 
         try {
             final SharedPreferences prefs = mLoadStoredPreferences.get();
@@ -205,5 +205,5 @@ import android.util.Log;
     private boolean mIdentitiesLoaded;
     private String mEventsDistinctId;
 
-    private static final String LOGTAG = "MixpanelAPI PersistentIdentity";
+    private static final String LOGTAG = "LogbookAPI PersistentIdentity";
 }

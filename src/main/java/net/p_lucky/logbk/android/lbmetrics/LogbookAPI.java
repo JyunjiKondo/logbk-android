@@ -80,7 +80,7 @@ public class LogbookAPI {
     /**
      * String version of the library.
      */
-    public static final String VERSION = MPConfig.VERSION;
+    public static final String VERSION = LBConfig.VERSION;
 
     /**
      * You shouldn't instantiate MixpanelAPI objects directly.
@@ -163,9 +163,9 @@ public class LogbookAPI {
     public static void setFlushInterval(Context context, long milliseconds) {
         Log.i(
             LOGTAG,
-            "MixpanelAPI.setFlushInterval is deprecated.\n" +
-            "    To set a custom Mixpanel flush interval for your application, add\n" +
-            "    <meta-data android:name=\"com.mixpanel.android.MPConfig.FlushInterval\" android:value=\"YOUR_INTERVAL\" />\n" +
+            "LogbookAPI.setFlushInterval is deprecated.\n" +
+            "    To set a custom Logbook flush interval for your application, add\n" +
+            "    <meta-data android:name=\"net.p_lucky.logbk.android.LBConfig.FlushInterval\" android:value=\"YOUR_INTERVAL\" />\n" +
             "    to the <application> section of your AndroidManifest.xml."
         );
         final AnalyticsMessages msgs = AnalyticsMessages.getInstance(context);
@@ -186,9 +186,9 @@ public class LogbookAPI {
     public static void enableFallbackServer(Context context, boolean enableIfTrue) {
         Log.i(
             LOGTAG,
-            "MixpanelAPI.enableFallbackServer is deprecated.\n" +
+            "LogbookAPI.enableFallbackServer is deprecated.\n" +
             "    To enable fallback in your application, add\n" +
-            "    <meta-data android:name=\"com.mixpanel.android.MPConfig.DisableFallback\" android:value=\"false\" />\n" +
+            "    <meta-data android:name=\"net.p_lucky.logbk.android.LBConfig.DisableFallback\" android:value=\"false\" />\n" +
             "    to the <application> section of your AndroidManifest.xml."
         );
         final AnalyticsMessages msgs = AnalyticsMessages.getInstance(context);
@@ -415,9 +415,9 @@ public class LogbookAPI {
     public void logPosts() {
         Log.i(
                 LOGTAG,
-                "MixpanelAPI.logPosts() is deprecated.\n" +
+                "LogbookAPI.logPosts() is deprecated.\n" +
                         "    To get verbose debug level logging, add\n" +
-                        "    <meta-data android:name=\"com.mixpanel.android.MPConfig.EnableDebugLogging\" />\n" +
+                        "    <meta-data android:name=\"net.p_lucky.logbk.android.LBConfig.EnableDebugLogging\" />\n" +
                         "    to the <application> section of your AndroidManifest.xml."
         );
     }
@@ -446,12 +446,12 @@ public class LogbookAPI {
         return AnalyticsMessages.getInstance(mContext);
     }
 
-    /* package */ MPConfig getConfig() {
-        return MPConfig.getInstance(mContext);
+    /* package */ LBConfig getConfig() {
+        return LBConfig.getInstance(mContext);
     }
 
     /* package */ PersistentIdentity getPersistentIdentity(final Context context, final String token) {
-        final String prefsName = "com.mixpanel.android.mpmetrics.MixpanelAPI_" + token;
+        final String prefsName = "net.p_lucky.logbk.android.lbmetrics.LogbookAPI_" + token;
         final Future<SharedPreferences> storedPreferences = sPrefsLoader.loadPreferences(context, prefsName, null);
         return new PersistentIdentity(storedPreferences);
     }
@@ -465,7 +465,7 @@ public class LogbookAPI {
 
     ////////////////////////////////////////////////////
 
-    private static final String LOGTAG = "MixpanelAPI";
+    private static final String LOGTAG = "LogbookAPI";
 
     private final Context mContext;
     private final AnalyticsMessages mMessages;

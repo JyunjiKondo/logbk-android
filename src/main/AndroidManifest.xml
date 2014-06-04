@@ -26,7 +26,7 @@
         <!-- to support 2.2 (Froyo) and older devices, your application should allow fallback
              to HTTP if modern HTTPS certificates aren't supported. -->
         <!--
-        <meta-data android:name="com.mixpanel.android.MPConfig.DisableFallback"
+        <meta-data android:name="net.p_lucky.logbk.android.LBConfig.DisableFallback"
             android:value="false" />
         -->
 
@@ -34,7 +34,7 @@
              library. This may be useful in determining when track calls go out or in app notifications or
              surveys are fetched. The default value is false. -->
         <!--
-        <meta-data android:name="com.mixpanel.android.MPConfig.EnableDebugLogging"
+        <meta-data android:name="net.p_lucky.logbk.android.LBConfig.EnableDebugLogging"
             android:value="true" />
         -->
     </application>
