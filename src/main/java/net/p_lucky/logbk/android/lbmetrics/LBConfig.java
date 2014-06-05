@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 /**
- * Stores global configuration options for the Mixpanel library.
+ * Stores global configuration options for the Logbook library.
  */
 public class LBConfig {
     public static final String VERSION = "4.2.1";

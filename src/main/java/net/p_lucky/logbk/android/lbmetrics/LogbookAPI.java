@@ -14,22 +14,21 @@ import android.provider.Contacts.People;
 import android.util.Log;
 
 /**
- * Core class for interacting with Mixpanel Analytics.
+ * Core class for interacting with Logbook Analytics.
  *
  * <p>Call {@link #getInstance(Context, String)} with
- * your main application activity and your Mixpanel API token as arguments
+ * your main application activity and your Logbook API token as arguments
  * an to get an instance you can use to report how users are using your
  * application.
  *
- * <p>Once you have an instance, you can send events to Mixpanel
- * using {@link #track(String, JSONObject)}, and update People Analytics
- * records with {@link #getPeople()}
+ * <p>Once you have an instance, you can send events to Logbook
+ * using {@link #track(String, JSONObject)}
  *
- * <p>The Mixpanel library will periodically send information to
- * Mixpanel servers, so your application will need to have
+ * <p>The Logbook library will periodically send information to
+ * Logbook servers, so your application will need to have
  * <tt>android.permission.INTERNET</tt>. In addition, to preserve
- * battery life, messages to Mixpanel servers may not be sent immediately
- * when you call <tt>track</tt> or {@link People#set(String, Object)}.
+ * battery life, messages to Logbook servers may not be sent immediately
+ * when you call <tt>track</tt>.
  * The library will send messages periodically throughout the lifetime
  * of your application, but you will need to call {@link #flush()}
  * before your application is completely shutdown to ensure all of your
@@ -40,41 +39,27 @@ import android.util.Log;
  * <pre>
  * {@code
  * public class MainActivity extends Activity {
- *      MixpanelAPI mMixpanel;
+ *      LogbookAPI mLogbook;
  *
  *      public void onCreate(Bundle saved) {
- *          mMixpanel = MixpanelAPI.getInstance(this, "YOUR MIXPANEL API TOKEN");
+ *          mLogbook = LogbookAPI.getInstance(this, "YOUR LOGBOOK API TOKEN");
  *          ...
  *      }
  *
  *      public void whenSomethingInterestingHappens(int flavor) {
  *          JSONObject properties = new JSONObject();
  *          properties.put("flavor", flavor);
- *          mMixpanel.track("Something Interesting Happened", properties);
+ *          mLogbook.track("Something Interesting Happened", properties);
  *          ...
  *      }
  *
  *      public void onDestroy() {
- *          mMixpanel.flush();
+ *          mLogoobk.flush();
  *          super.onDestroy();
  *      }
  * }
  * }
  * </pre>
- *
- * <p>In addition to this documentation, you may wish to take a look at
- * <a href="https://github.com/mixpanel/sample-android-mixpanel-integration">the Mixpanel sample Android application</a>.
- * It demonstrates a variety of techniques, including
- * updating People Analytics records with {@link People} and registering for
- * and receiving push notifications with {@link People#initPushHandling(String)}.
- *
- * <p>There are also <a href="https://mixpanel.com/docs/">step-by-step getting started documents</a>
- * available at mixpanel.com
- *
- * @see <a href="https://mixpanel.com/docs/integration-libraries/android">getting started documentation for tracking events</a>
- * @see <a href="https://mixpanel.com/docs/people-analytics/android">getting started documentation for People Analytics</a>
- * @see <a href="https://mixpanel.com/docs/people-analytics/android-push">getting started with push notifications for Android</a>
- * @see <a href="https://github.com/mixpanel/sample-android-mixpanel-integration">The Mixpanel Android sample application</a>
  */
 public class LogbookAPI {
     /**
@@ -83,8 +68,8 @@ public class LogbookAPI {
     public static final String VERSION = LBConfig.VERSION;
 
     /**
-     * You shouldn't instantiate MixpanelAPI objects directly.
-     * Use MixpanelAPI.getInstance to get an instance.
+     * You shouldn't instantiate LogbookAPI objects directly.
+     * Use LogbookAPI.getInstance to get an instance.
      */
     LogbookAPI(Context context, String token) {
         mContext = context;
@@ -94,20 +79,20 @@ public class LogbookAPI {
     }
 
     /**
-     * Get the instance of MixpanelAPI associated with your Mixpanel project token.
+     * Get the instance of LogbookAPI associated with your Logbook project token.
      *
      * <p>Use getInstance to get a reference to a shared
-     * instance of MixpanelAPI you can use to send events
-     * and People Analytics updates to Mixpanel.</p>
+     * instance of LogbookAPI you can use to send events
+     * to Logbook.</p>
      * <p>getInstance is thread safe, but the returned instance is not,
      * and may be shared with other callers of getInstance.
-     * The best practice is to call getInstance, and use the returned MixpanelAPI,
+     * The best practice is to call getInstance, and use the returned LogbookAPI,
      * object from a single thread (probably the main UI thread of your application).</p>
      * <p>If you do choose to track events from multiple threads in your application,
      * you should synchronize your calls on the instance itself, like so:</p>
      * <pre>
      * {@code
-     * MixpanelAPI instance = MixpanelAPI.getInstance(context, token);
+     * LogbookAPI instance = LogbookAPI.getInstance(context, token);
      * synchronized(instance) { // Only necessary if the instance will be used in multiple threads.
      *     instance.track(...)
      * }
@@ -115,9 +100,9 @@ public class LogbookAPI {
      * </pre>
      *
      * @param context The application context you are tracking
-     * @param token Your Mixpanel project token. You can get your project token on the Mixpanel web site,
+     * @param token Your Logbook project token. You can get your project token on the Logbook web site,
      *     in the settings dialog.
-     * @return an instance of MixpanelAPI associated with your project
+     * @return an instance of LogbookAPI associated with your project
      */
     public static LogbookAPI getInstance(Context context, String token) {
         if (null == token || null == context) {
@@ -144,8 +129,8 @@ public class LogbookAPI {
     /**
      * Track an event.
      *
-     * <p>Every call to track eventually results in a data point sent to Mixpanel. These data points
-     * are what are measured, counted, and broken down to create your Mixpanel reports. Events
+     * <p>Every call to track eventually results in a data point sent to Logbook. These data points
+     * are what are measured, counted, and broken down to create your Logbook reports. Events
      * have a string name, and an optional set of name/value pairs that describe the properties of
      * that event.
      *
@@ -154,7 +139,7 @@ public class LogbookAPI {
      *                   Pass null if no extra properties exist.
      */
     // DO NOT DOCUMENT, but track() must be thread safe since it is used to track events in
-    // notifications from the UI thread, which might not be our MixpanelAPI "home" thread.
+    // notifications from the UI thread, which might not be our LogbookAPI "home" thread.
     // This MAY CHANGE IN FUTURE RELEASES, so minimize code that assumes thread safety
     // (and perhaps document that code here).
     public void track(String eventName, JSONObject properties) {
@@ -184,12 +169,12 @@ public class LogbookAPI {
     }
 
     /**
-     * Push all queued Mixpanel events and People Analytics changes to Mixpanel servers.
+     * Push all queued Logbook events to Logbook servers.
      *
-     * <p>Events and People messages are pushed gradually throughout
+     * <p>Events messages are pushed gradually throughout
      * the lifetime of your application. This means that to ensure that all messages
-     * are sent to Mixpanel when your application is shut down, you will
-     * need to call flush() to let the Mixpanel library know it should
+     * are sent to Logbook when your application is shut down, you will
+     * need to call flush() to let the Logbook library know it should
      * send all remaining messages to the server. We strongly recommend
      * placing a call to flush() in the onDestroy() method of
      * your main application activity.
@@ -200,17 +185,13 @@ public class LogbookAPI {
 
     /**
      * Returns the string id currently being used to uniquely identify the user associated
-     * with events sent using {@link #track(String, JSONObject)}. Before any calls to
-     * {@link #identify(String)}, this will be an id automatically generated by the library.
+     * with events sent using {@link #track(String, JSONObject)}. 
+     * This will be an id automatically generated by the library.
      *
      * <p>The id returned by getDistinctId is independent of the distinct id used to identify
-     * any People Analytics properties in Mixpanel. To read and write that identifier,
-     * use {@link People#identify(String)} and {@link People#getDistinctId()}.
+     * any People Analytics properties in Logbook.
      *
      * @return The distinct id associated with event tracking
-     *
-     * @see #identify(String)
-     * @see People#getDistinctId()
      */
     private String getDistinctId() {
         return mPersistentIdentity.getEventsDistinctId();
@@ -239,7 +220,7 @@ public class LogbookAPI {
     private final String mToken;
     private final PersistentIdentity mPersistentIdentity;
 
-    // Maps each token to a singleton MixpanelAPI instance
+    // Maps each token to a singleton LogbookAPI instance
     private static final Map<String, Map<Context, LogbookAPI>> sInstanceMap = new HashMap<String, Map<Context, LogbookAPI>>();
     private static final SharedPreferencesLoader sPrefsLoader = new SharedPreferencesLoader();
 }

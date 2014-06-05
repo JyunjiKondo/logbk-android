@@ -30,7 +30,7 @@
             android:value="false" />
         -->
 
-        <!-- Set the following option to true if you wish to see the debug output from the Mixpanel Android
+        <!-- Set the following option to true if you wish to see the debug output from the Logbook Android
              library. This may be useful in determining when track calls go out or in app notifications or
              surveys are fetched. The default value is false. -->
         <!--

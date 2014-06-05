@@ -15,7 +15,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 /**
- * SQLite database adapter for MixpanelAPI.
+ * SQLite database adapter for LogbookAPI.
  *
  * <p>Not thread-safe. Instances of this class should only be used
  * by a single thread.
@@ -195,7 +195,7 @@ class LBDbAdapter {
 
 
     /**
-     * Returns the data string to send to Mixpanel and the maximum ID of the row that
+     * Returns the data string to send to Logbook and the maximum ID of the row that
      * we're sending, so we know what rows to delete when a track request was successful.
      *
      * @param table the table to read the JSON from "events"

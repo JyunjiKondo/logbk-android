@@ -27,10 +27,10 @@ import android.util.Log;
 
 
 /**
- * Manage communication of events with the internal database and the Mixpanel servers.
+ * Manage communication of events with the internal database and the Logbook servers.
  *
  * <p>This class straddles the thread boundary between user threads and
- * a logical Mixpanel thread.
+ * a logical Logbook thread.
  */
 /* package */ class AnalyticsMessages {
 
@@ -120,9 +120,9 @@ import android.util.Log;
         private final String token;
     }
 
-    // Sends a message if and only if we are running with Mixpanel Message log enabled.
-    // Will be called from the Mixpanel thread.
-    private void logAboutMessageToMixpanel(String message) {
+    // Sends a message if and only if we are running with Logbook Message log enabled.
+    // Will be called from the Logbook thread.
+    private void logAboutMessageToLogbook(String message) {
         if (LBConfig.DEBUG) {
             Log.d(LOGTAG, message + " (Thread " + Thread.currentThread().getId() + ")");
         }
@@ -140,7 +140,7 @@ import android.util.Log;
             synchronized(mHandlerLock) {
                 if (mHandler == null) {
                     // We died under suspicious circumstances. Don't try to send any more events.
-                    logAboutMessageToMixpanel("Dead mixpanel worker dropping a message: " + msg.what);
+                    logAboutMessageToLogbook("Dead Logbook worker dropping a message: " + msg.what);
                 } else {
                     mHandler.sendMessage(msg);
                 }
@@ -179,15 +179,15 @@ import android.util.Log;
                         final EventDescription eventDescription = (EventDescription) msg.obj;
                         try {
                             final JSONObject message = prepareEventObject(eventDescription);
-                            logAboutMessageToMixpanel("Queuing event for sending later");
-                            logAboutMessageToMixpanel("    " + message.toString());
+                            logAboutMessageToLogbook("Queuing event for sending later");
+                            logAboutMessageToLogbook("    " + message.toString());
                             queueDepth = mDbAdapter.addJSON(message, LBDbAdapter.Table.EVENTS);
                         } catch (final JSONException e) {
                             Log.e(LOGTAG, "Exception tracking event " + eventDescription.getEventName(), e);
                         }
                     }
                     else if (msg.what == FLUSH_QUEUE) {
-                        logAboutMessageToMixpanel("Flushing queue due to scheduled or forced flush");
+                        logAboutMessageToLogbook("Flushing queue due to scheduled or forced flush");
                         updateFlushFrequency();
                         sendAllData(mDbAdapter);
                     } else {
@@ -197,7 +197,7 @@ import android.util.Log;
                     ///////////////////////////
 
                     if (queueDepth >= mConfig.getBulkUploadLimit()) {
-                        logAboutMessageToMixpanel("Flushing queue due to bulk upload limit");
+                        logAboutMessageToLogbook("Flushing queue due to bulk upload limit");
                         updateFlushFrequency();
                         sendAllData(mDbAdapter);
                     } else if (queueDepth > 0 && !hasMessages(FLUSH_QUEUE)) {
@@ -207,7 +207,7 @@ import android.util.Log;
                         // a flush right here, so we may end up with two flushes
                         // in our queue, but we're OK with that.
 
-                        logAboutMessageToMixpanel("Queue depth " + queueDepth + " - Adding flush in " + mFlushInterval);
+                        logAboutMessageToLogbook("Queue depth " + queueDepth + " - Adding flush in " + mFlushInterval);
                         if (mFlushInterval >= 0) {
                             sendEmptyMessageDelayed(FLUSH_QUEUE, mFlushInterval);
                         }
@@ -230,11 +230,11 @@ import android.util.Log;
             private void sendAllData(LBDbAdapter dbAdapter) {
                 final ServerMessage poster = getPoster();
                 if (! poster.isOnline(mContext)) {
-                    logAboutMessageToMixpanel("Not flushing data to Mixpanel because the device is not connected to the internet.");
+                    logAboutMessageToLogbook("Not flushing data to Logbook because the device is not connected to the internet.");
                     return;
                 }
 
-                logAboutMessageToMixpanel("Sending records to Mixpanel");
+                logAboutMessageToLogbook("Sending records to Logbook");
                 if (mDisableFallback) {
                     sendData(dbAdapter, LBDbAdapter.Table.EVENTS, new String[]{ mConfig.getEventsEndpoint() });
                  } else {
@@ -276,8 +276,8 @@ import android.util.Log;
                                     throw new RuntimeException("UTF not supported on this platform?", e);
                                 }
 
-                                logAboutMessageToMixpanel("Successfully posted to " + url + ": \n" + rawMessage);
-                                logAboutMessageToMixpanel("Response was " + parsedResponse);
+                                logAboutMessageToLogbook("Successfully posted to " + url + ": \n" + rawMessage);
+                                logAboutMessageToLogbook("Response was " + parsedResponse);
                             }
                             break;
                         } catch (final OutOfMemoryError e) {
@@ -294,10 +294,10 @@ import android.util.Log;
                     }
 
                     if (deleteEvents) {
-                        logAboutMessageToMixpanel("Not retrying this batch of events, deleting them from DB.");
+                        logAboutMessageToLogbook("Not retrying this batch of events, deleting them from DB.");
                         dbAdapter.cleanupEvents(lastId, table);
                     } else {
-                        logAboutMessageToMixpanel("Retrying this batch of events.");
+                        logAboutMessageToLogbook("Retrying this batch of events.");
                         if (!hasMessages(FLUSH_QUEUE)) {
                             sendEmptyMessageDelayed(FLUSH_QUEUE, mFlushInterval);
                         }
@@ -387,7 +387,7 @@ import android.util.Log;
                 mAveFlushFrequency = totalFlushTime / newFlushCount;
 
                 final long seconds = mAveFlushFrequency / 1000;
-                logAboutMessageToMixpanel("Average send frequency approximately " + seconds + " seconds.");
+                logAboutMessageToLogbook("Average send frequency approximately " + seconds + " seconds.");
             }
 
             mLastFlushTime = now;

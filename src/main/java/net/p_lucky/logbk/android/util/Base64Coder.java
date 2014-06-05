@@ -15,7 +15,7 @@ package net.p_lucky.logbk.android.util;
 //Please contact the author if you need another license.
 //This module is provided "as is", without warranties of any kind.
 //
-// This file has been modified from it's original version by Mixpanel, Inc
+// This file has been modified from it's original version by Logbook, Inc
 
 public class Base64Coder {
 
