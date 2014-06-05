@@ -3,13 +3,14 @@ package net.p_lucky.logbk.android.lbmetrics;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
 
-/* package */ class PersistentIdentity {
+/* package */ @SuppressLint("CommitPrefEdits")
+class PersistentIdentity {
 
     public PersistentIdentity(Future<SharedPreferences> storedPreferences) {
         mLoadStoredPreferences = storedPreferences;
