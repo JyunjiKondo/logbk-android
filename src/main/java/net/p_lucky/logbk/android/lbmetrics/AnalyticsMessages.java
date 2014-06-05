@@ -1,20 +1,5 @@
 package net.p_lucky.logbk.android.lbmetrics;
 
-import android.content.Context;
-import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import net.p_lucky.logbk.android.util.Base64Coder;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -23,6 +8,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import net.p_lucky.logbk.android.util.Base64Coder;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Context;
+import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
+import android.util.DisplayMetrics;
+import android.util.Log;
 
 
 /**
@@ -71,15 +72,6 @@ import java.util.Map;
         mWorker.runMessage(m);
     }
 
-    // Must be thread safe.
-    public void peopleMessage(final JSONObject peopleJson) {
-        final Message m = Message.obtain();
-        m.what = ENQUEUE_PEOPLE;
-        m.obj = peopleJson;
-
-        mWorker.runMessage(m);
-    }
-
     public void postToServer() {
         final Message m = Message.obtain();
         m.what = FLUSH_QUEUE;
@@ -105,14 +97,6 @@ import java.util.Map;
         final Message m = Message.obtain();
         m.what = SET_DISABLE_FALLBACK;
         m.obj = disableIfTrue;
-
-        mWorker.runMessage(m);
-    }
-
-    public void installDecideCheck(final DecideUpdates check) {
-        final Message m = Message.obtain();
-        m.what = INSTALL_DECIDE_CHECK;
-        m.obj = check;
 
         mWorker.runMessage(m);
     }
@@ -215,7 +199,6 @@ import java.util.Map;
             public AnalyticsMessageHandler(Looper looper) {
                 super(looper);
                 mDbAdapter = null;
-                mDecideChecker = new DecideChecker(mContext, mConfig);
                 mDisableFallback = mConfig.getDisableFallback();
                 mFlushInterval = mConfig.getFlushInterval();
                 mSystemInformation = new SystemInformation(mContext);
@@ -226,7 +209,6 @@ import java.util.Map;
                 if (mDbAdapter == null) {
                     mDbAdapter = makeDbAdapter(mContext);
                     mDbAdapter.cleanupEvents(System.currentTimeMillis() - mConfig.getDataExpiration(), MPDbAdapter.Table.EVENTS);
-                    mDbAdapter.cleanupEvents(System.currentTimeMillis() - mConfig.getDataExpiration(), MPDbAdapter.Table.PEOPLE);
                 }
 
                 try {
@@ -243,14 +225,6 @@ import java.util.Map;
                         logAboutMessageToMixpanel("Setting fallback to " + disableState);
                         mDisableFallback = disableState.booleanValue();
                     }
-                    else if (msg.what == ENQUEUE_PEOPLE) {
-                        final JSONObject message = (JSONObject) msg.obj;
-
-                        logAboutMessageToMixpanel("Queuing people record for sending later");
-                        logAboutMessageToMixpanel("    " + message.toString());
-
-                        queueDepth = mDbAdapter.addJSON(message, MPDbAdapter.Table.PEOPLE);
-                    }
                     else if (msg.what == ENQUEUE_EVENTS) {
                         final EventDescription eventDescription = (EventDescription) msg.obj;
                         try {
@@ -265,14 +239,7 @@ import java.util.Map;
                     else if (msg.what == FLUSH_QUEUE) {
                         logAboutMessageToMixpanel("Flushing queue due to scheduled or forced flush");
                         updateFlushFrequency();
-                        mDecideChecker.runDecideChecks(getPoster());
                         sendAllData(mDbAdapter);
-                    }
-                    else if (msg.what == INSTALL_DECIDE_CHECK) {
-                        logAboutMessageToMixpanel("Installing a check for surveys and in app notifications");
-                        final DecideUpdates check = (DecideUpdates) msg.obj;
-                        mDecideChecker.addDecideCheck(check);
-                        mDecideChecker.runDecideChecks(getPoster());
                     }
                     else if (msg.what == KILL_WORKER) {
                         Log.w(LOGTAG, "Worker received a hard kill. Dumping all events and force-killing. Thread id " + Thread.currentThread().getId());
@@ -328,12 +295,9 @@ import java.util.Map;
                 logAboutMessageToMixpanel("Sending records to Mixpanel");
                 if (mDisableFallback) {
                     sendData(dbAdapter, MPDbAdapter.Table.EVENTS, new String[]{ mConfig.getEventsEndpoint() });
-                    sendData(dbAdapter, MPDbAdapter.Table.PEOPLE, new String[]{ mConfig.getPeopleEndpoint() });
                  } else {
                     sendData(dbAdapter, MPDbAdapter.Table.EVENTS,
                              new String[]{ mConfig.getEventsEndpoint(), mConfig.getEventsFallbackEndpoint() });
-                    sendData(dbAdapter, MPDbAdapter.Table.PEOPLE,
-                             new String[]{ mConfig.getPeopleEndpoint(), mConfig.getPeopleFallbackEndpoint() });
                 }
             }
 
@@ -469,7 +433,6 @@ import java.util.Map;
             private MPDbAdapter mDbAdapter;
             private long mFlushInterval; // XXX remove when associated deprecated APIs are removed
             private boolean mDisableFallback; // XXX remove when associated deprecated APIs are removed
-            private final DecideChecker mDecideChecker;
         }// AnalyticsMessageHandler
 
         private void updateFlushFrequency() {
@@ -505,11 +468,9 @@ import java.util.Map;
     private final MPConfig mConfig;
 
     // Messages for our thread
-    private static int ENQUEUE_PEOPLE = 0; // submit events and people data
-    private static int ENQUEUE_EVENTS = 1; // push given JSON message to people DB
-    private static int FLUSH_QUEUE = 2; // push given JSON message to events DB
+    private static int ENQUEUE_EVENTS = 1; // push given JSON message to events DB
+    private static int FLUSH_QUEUE = 2;
     private static int KILL_WORKER = 5; // Hard-kill the worker thread, discarding all events on the event queue. This is for testing, or disasters.
-    private static int INSTALL_DECIDE_CHECK = 12; // Run this DecideCheck at intervals until it isDestroyed()
 
     private static int SET_FLUSH_INTERVAL = 4; // XXX REMOVE when associated deprecated APIs are removed
     private static int SET_DISABLE_FALLBACK = 10; // XXX REMOVE when associated deprecated APIs are removed
