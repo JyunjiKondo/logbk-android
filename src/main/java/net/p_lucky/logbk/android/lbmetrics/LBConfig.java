@@ -15,10 +15,6 @@ public class LBConfig {
 
     public static boolean DEBUG = false;
 
-    // Max size of the number of notifications we will hold in memory. Since they may contain images,
-    // we don't want to suck up all of the memory on the device.
-    /* package */ static final int MAX_NOTIFICATION_CACHE_COUNT = 2;
-
     // Instances are safe to store, since they're immutable and always the same.
     public static LBConfig getInstance(Context context) {
         synchronized (sInstanceLock) {

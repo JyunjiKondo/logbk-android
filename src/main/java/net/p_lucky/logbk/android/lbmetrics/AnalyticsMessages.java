@@ -79,41 +79,8 @@ import android.util.Log;
         mWorker.runMessage(m);
     }
 
-    /**
-     * Remove this when we eliminate the associated deprecated public ifc
-     */
-    public void setFlushInterval(final long milliseconds) {
-        final Message m = Message.obtain();
-        m.what = SET_FLUSH_INTERVAL;
-        m.obj = milliseconds;
-
-        mWorker.runMessage(m);
-    }
-
-    /**
-     * Remove this when we eliminate the associated deprecated public ifc
-     */
-    public void setDisableFallback(boolean disableIfTrue) {
-        final Message m = Message.obtain();
-        m.what = SET_DISABLE_FALLBACK;
-        m.obj = disableIfTrue;
-
-        mWorker.runMessage(m);
-    }
-
-    public void hardKill() {
-        final Message m = Message.obtain();
-        m.what = KILL_WORKER;
-
-        mWorker.runMessage(m);
-    }
-
     /////////////////////////////////////////////////////////
     // For testing, to allow for Mocking.
-
-    /* package */ boolean isDead() {
-        return mWorker.isDead();
-    }
 
     protected LBDbAdapter makeDbAdapter(Context context) {
         return new LBDbAdapter(context);
@@ -169,12 +136,6 @@ import android.util.Log;
             mHandler = restartWorkerThread();
         }
 
-        public boolean isDead() {
-            synchronized(mHandlerLock) {
-                return mHandler == null;
-            }
-        }
-
         public void runMessage(Message msg) {
             synchronized(mHandlerLock) {
                 if (mHandler == null) {
@@ -214,18 +175,7 @@ import android.util.Log;
                 try {
                     int queueDepth = -1;
 
-                    if (msg.what == SET_FLUSH_INTERVAL) {
-                        final Long newIntervalObj = (Long) msg.obj;
-                        logAboutMessageToMixpanel("Changing flush interval to " + newIntervalObj);
-                        mFlushInterval = newIntervalObj.longValue();
-                        removeMessages(FLUSH_QUEUE);
-                    }
-                    else if (msg.what == SET_DISABLE_FALLBACK) {
-                        final Boolean disableState = (Boolean) msg.obj;
-                        logAboutMessageToMixpanel("Setting fallback to " + disableState);
-                        mDisableFallback = disableState.booleanValue();
-                    }
-                    else if (msg.what == ENQUEUE_EVENTS) {
+                    if (msg.what == ENQUEUE_EVENTS) {
                         final EventDescription eventDescription = (EventDescription) msg.obj;
                         try {
                             final JSONObject message = prepareEventObject(eventDescription);
@@ -240,14 +190,6 @@ import android.util.Log;
                         logAboutMessageToMixpanel("Flushing queue due to scheduled or forced flush");
                         updateFlushFrequency();
                         sendAllData(mDbAdapter);
-                    }
-                    else if (msg.what == KILL_WORKER) {
-                        Log.w(LOGTAG, "Worker received a hard kill. Dumping all events and force-killing. Thread id " + Thread.currentThread().getId());
-                        synchronized(mHandlerLock) {
-                            mDbAdapter.deleteDB();
-                            mHandler = null;
-                            Looper.myLooper().quit();
-                        }
                     } else {
                         Log.e(LOGTAG, "Unexpected message received by Logbook worker: " + msg);
                     }
@@ -470,13 +412,8 @@ import android.util.Log;
     // Messages for our thread
     private static int ENQUEUE_EVENTS = 1; // push given JSON message to events DB
     private static int FLUSH_QUEUE = 2;
-    private static int KILL_WORKER = 5; // Hard-kill the worker thread, discarding all events on the event queue. This is for testing, or disasters.
-
-    private static int SET_FLUSH_INTERVAL = 4; // XXX REMOVE when associated deprecated APIs are removed
-    private static int SET_DISABLE_FALLBACK = 10; // XXX REMOVE when associated deprecated APIs are removed
 
     private static final String LOGTAG = "LogbookAPI";
 
     private static final Map<Context, AnalyticsMessages> sInstances = new HashMap<Context, AnalyticsMessages>();
-
 }
