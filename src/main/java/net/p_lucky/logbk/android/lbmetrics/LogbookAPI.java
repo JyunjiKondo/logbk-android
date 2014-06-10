@@ -192,7 +192,7 @@ public class LogbookAPI {
      *
      * @return The distinct id associated with event tracking
      */
-    private String getDistinctId() {
+    public String getDistinctId() {
         return mPersistentIdentity.getEventsDistinctId();
     }
 
@@ -208,6 +208,13 @@ public class LogbookAPI {
         final String prefsName = "net.p_lucky.logbk.android.lbmetrics.LogbookAPI_" + token;
         final Future<SharedPreferences> storedPreferences = sPrefsLoader.loadPreferences(context, prefsName, null);
         return new PersistentIdentity(storedPreferences);
+    }
+
+    /* package */ void clearPreferences() {
+        // Will clear distinct_ids, superProperties,
+        // and waiting People Analytics properties. Will have no effect
+        // on messages already queued to send with AnalyticsMessages.
+        mPersistentIdentity.clearPreferences();
     }
 
     ////////////////////////////////////////////////////

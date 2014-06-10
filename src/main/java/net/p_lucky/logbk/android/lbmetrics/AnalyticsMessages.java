@@ -79,8 +79,19 @@ import android.util.Log;
         mWorker.runMessage(m);
     }
 
+    public void hardKill() {
+        final Message m = Message.obtain();
+        m.what = KILL_WORKER;
+
+        mWorker.runMessage(m);
+    }
+
     /////////////////////////////////////////////////////////
     // For testing, to allow for Mocking.
+
+    /* package */ boolean isDead() {
+        return mWorker.isDead();
+    }
 
     protected LBDbAdapter makeDbAdapter(Context context) {
         return new LBDbAdapter(context);
@@ -134,6 +145,12 @@ import android.util.Log;
     private class Worker {
         public Worker() {
             mHandler = restartWorkerThread();
+        }
+
+        public boolean isDead() {
+            synchronized(mHandlerLock) {
+                return mHandler == null;
+            }
         }
 
         public void runMessage(Message msg) {
@@ -412,6 +429,7 @@ import android.util.Log;
     // Messages for our thread
     private static int ENQUEUE_EVENTS = 1; // push given JSON message to events DB
     private static int FLUSH_QUEUE = 2;
+    private static int KILL_WORKER = 5; // Hard-kill the worker thread, discarding all events on the event queue. This is for testing, or disasters.
 
     private static final String LOGTAG = "LogbookAPI";
 
