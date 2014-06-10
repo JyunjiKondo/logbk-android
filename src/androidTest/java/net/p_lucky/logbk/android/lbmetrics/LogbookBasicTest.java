@@ -33,7 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class MixpanelBasicTest extends AndroidTestCase {
+public class LogbookBasicTest extends AndroidTestCase {
 
     @Override
     protected void setUp() throws Exception {
