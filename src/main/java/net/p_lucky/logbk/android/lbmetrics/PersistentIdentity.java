@@ -70,7 +70,7 @@ class PersistentIdentity {
         mEventsDistinctId = prefs.getString("events_distinct_id", null);
 
         if (null == mEventsDistinctId) {
-            mEventsDistinctId = UUID.randomUUID().toString();
+            mEventsDistinctId = UUID.randomUUID().toString().replaceAll("-", "");
             writeIdentities();
         }
 

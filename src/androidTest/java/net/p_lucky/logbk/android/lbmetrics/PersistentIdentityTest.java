@@ -29,7 +29,7 @@ public class PersistentIdentityTest extends AndroidTestCase {
         final SharedPreferences testPreferences = getContext().getSharedPreferences(TEST_PREFERENCES, Context.MODE_PRIVATE);
         testPreferences.edit().clear().commit();
         final String eventsId = mPersistentIdentity.getEventsDistinctId();
-        assertTrue(Pattern.matches("^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$", eventsId));
+        assertTrue(Pattern.matches("^[A-Fa-f0-9]{32}$", eventsId));
 
         final String autoId = testPreferences.getString("events_distinct_id", "NOPE");
         assertEquals(autoId, eventsId);
