@@ -354,6 +354,7 @@ public class LogbookBasicTest extends AndroidTestCase {
                 super.cleanupEvents(last_id, table);
             }
         };
+        mockAdapter.cleanupEvents(Long.MAX_VALUE, LBDbAdapter.Table.EVENTS);
 
         final AnalyticsMessages listener = new AnalyticsMessages(getContext()) {
             @Override
@@ -520,6 +521,109 @@ public class LogbookBasicTest extends AndroidTestCase {
         assertEquals(true, testConfig.getDisableFallback());
         assertEquals("EVENTS ENDPOINT", testConfig.getEventsEndpoint());
         assertEquals("EVENTS FALLBACK ENDPOINT", testConfig.getEventsFallbackEndpoint());
+    }
+
+    public void testTrackAcquisition() {
+        doTestTrackEvent(Action.Acquisition);
+    }
+
+    public void testTrackActivation() {
+        doTestTrackEvent(Action.Activation);
+    }
+
+    public void testTrackRetention() {
+        doTestTrackEvent(Action.Retention);
+    }
+
+    public void testTrackReferral() {
+        doTestTrackEvent(Action.Referral);
+    }
+
+    public void testTrackRevenue() {
+        doTestTrackEvent(Action.Revenue);
+    }
+
+    private void doTestTrackEvent(Action action) {
+        final BlockingQueue<String> messages = new LinkedBlockingQueue<String>();
+
+        final LBDbAdapter mockAdapter = new LBDbAdapter(getContext()) {
+            @Override
+            public int addJSON(JSONObject message, LBDbAdapter.Table table) {
+                try {
+                    messages.put("TABLE " + table.getName());
+                    messages.put(message.toString());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                return super.addJSON(message, table);
+            }
+        };
+        mockAdapter.cleanupEvents(Long.MAX_VALUE, LBDbAdapter.Table.EVENTS);
+
+        final LBConfig mockConfig = new LBConfig(new Bundle()) {
+            @Override
+            public int getFlushInterval() {
+                return -1;
+            }
+        };
+
+        final AnalyticsMessages listener = new AnalyticsMessages(getContext()) {
+            @Override
+            protected LBDbAdapter makeDbAdapter(Context context) {
+                return mockAdapter;
+            }
+
+            @Override
+            protected LBConfig getConfig(Context context) {
+                return mockConfig;
+            }
+        };
+
+        LogbookAPI metrics = new TestUtils.CleanLogbookAPI(getContext(), mMockPreferences, "Test Message Queuing") {
+            @Override
+            protected AnalyticsMessages getAnalyticsMessages() {
+                return listener;
+            }
+        };
+
+        try {
+            metrics.getClass().getMethod("track" + action.toString(), null).invoke(metrics, null);
+        } catch (Exception e) {
+            fail("Unexpected interruption");
+        }
+
+        String expectedJSONMessage = "<No message actually received>";
+        try {
+            String messageTable = messages.poll(1, TimeUnit.SECONDS);
+            assertEquals("TABLE " + LBDbAdapter.Table.EVENTS.getName(), messageTable);
+
+            expectedJSONMessage = messages.poll(1, TimeUnit.SECONDS);
+            JSONObject message = new JSONObject(expectedJSONMessage);
+            assertEquals(action.getEventName(), message.getString("event"));
+        } catch (InterruptedException e) {
+            fail("Expected a log message about logbook communication but did not recieve it.");
+        } catch (JSONException e) {
+            fail("Expected a JSON object message and got something silly instead: " + expectedJSONMessage);
+        }
+    }
+
+    enum Action {
+        Acquisition("_acquisition"),
+        Activation("_activation"),
+        Retention("_retention"),
+        Referral("_referral"),
+        Revenue("_revenue");
+
+        Action(String eventName) {
+            mEventName = eventName;
+        }
+
+        public String getEventName() {
+            return mEventName;
+        }
+
+        private final String mEventName;
     }
 
     private Future<SharedPreferences> mMockPreferences;
