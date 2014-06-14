@@ -168,6 +168,76 @@ public class LogbookAPI {
     }
 
     /**
+     * Track acquisition event.
+     *
+     * <p>Every call to trackAcquisition eventually results in a data point sent to Logbook. These data points
+     * are what are measured, counted, and broken down to create your Logbook reports.
+     */
+    // DO NOT DOCUMENT, but trackAcquisition() must be thread safe since it is used to track events in
+    // notifications from the UI thread, which might not be our LogbookAPI "home" thread.
+    // This MAY CHANGE IN FUTURE RELEASES, so minimize code that assumes thread safety
+    // (and perhaps document that code here).
+    public void trackAcquisition() {
+        track("_acquisition", null);
+    }
+
+    /**
+     * Track activation event.
+     *
+     * <p>Every call to trackActivation eventually results in a data point sent to Logbook. These data points
+     * are what are measured, counted, and broken down to create your Logbook reports.
+     */
+    // DO NOT DOCUMENT, but trackActivation() must be thread safe since it is used to track events in
+    // notifications from the UI thread, which might not be our LogbookAPI "home" thread.
+    // This MAY CHANGE IN FUTURE RELEASES, so minimize code that assumes thread safety
+    // (and perhaps document that code here).
+    public void trackActivation() {
+        track("_activation", null);
+    }
+
+    /**
+     * Track retention event.
+     *
+     * <p>Every call to trackRetention eventually results in a data point sent to Logbook. These data points
+     * are what are measured, counted, and broken down to create your Logbook reports.
+     */
+    // DO NOT DOCUMENT, but trackRetention() must be thread safe since it is used to track events in
+    // notifications from the UI thread, which might not be our LogbookAPI "home" thread.
+    // This MAY CHANGE IN FUTURE RELEASES, so minimize code that assumes thread safety
+    // (and perhaps document that code here).
+    public void trackRetention() {
+        track("_retention", null);
+    }
+
+    /**
+     * Track referral event.
+     *
+     * <p>Every call to trackReferral eventually results in a data point sent to Logbook. These data points
+     * are what are measured, counted, and broken down to create your Logbook reports.
+     */
+    // DO NOT DOCUMENT, but trackReferral() must be thread safe since it is used to track events in
+    // notifications from the UI thread, which might not be our LogbookAPI "home" thread.
+    // This MAY CHANGE IN FUTURE RELEASES, so minimize code that assumes thread safety
+    // (and perhaps document that code here).
+    public void trackReferral() {
+        track("_referral", null);
+    }
+
+    /**
+     * Track revenue event.
+     *
+     * <p>Every call to trackRevenue eventually results in a data point sent to Logbook. These data points
+     * are what are measured, counted, and broken down to create your Logbook reports.
+     */
+    // DO NOT DOCUMENT, but trackRevenue() must be thread safe since it is used to track events in
+    // notifications from the UI thread, which might not be our LogbookAPI "home" thread.
+    // This MAY CHANGE IN FUTURE RELEASES, so minimize code that assumes thread safety
+    // (and perhaps document that code here).
+    public void trackRevenue() {
+        track("_revenue", null);
+    }
+
+    /**
      * Push all queued Logbook events to Logbook servers.
      *
      * <p>Events messages are pushed gradually throughout
