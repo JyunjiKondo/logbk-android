@@ -13,10 +13,8 @@ public class PersistentIdentityTest extends AndroidTestCase {
         SharedPreferences.Editor prefsEditor = testPreferences.edit();
         prefsEditor.clear();
         prefsEditor.putString("events_distinct_id", "EVENTS DISTINCT ID");
-        prefsEditor.putString("people_distinct_id", "PEOPLE DISTINCT ID");
         prefsEditor.putString("push_id", "PUSH ID");
         prefsEditor.putString("waiting_array", "[ {\"thing\": 1}, {\"thing\": 2} ]");
-        prefsEditor.putString("super_properties", "{\"thing\": \"superprops\"}");
         prefsEditor.commit();
 
         SharedPreferencesLoader loader = new SharedPreferencesLoader();
