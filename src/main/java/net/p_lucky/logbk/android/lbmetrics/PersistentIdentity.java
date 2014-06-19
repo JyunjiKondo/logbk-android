@@ -33,7 +33,7 @@ class PersistentIdentity {
     }
 
     public synchronized void clearPreferences() {
-        // Will clear distinct_ids and superProperties.
+        // Will clear distinct_ids.
         // Will have no effect
         // on messages already queued to send with AnalyticsMessages.
 
