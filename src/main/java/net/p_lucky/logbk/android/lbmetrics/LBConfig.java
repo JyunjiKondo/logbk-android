@@ -33,19 +33,12 @@ public class LBConfig {
         mBulkUploadLimit = metaData.getInt("net.p_lucky.logbk.android.LBConfig.BulkUploadLimit", 40); // 40 records default
         mFlushInterval = metaData.getInt("net.p_lucky.logbk.android.LBConfig.FlushInterval", 60 * 1000); // one minute default
         mDataExpiration = metaData.getInt("net.p_lucky.logbk.android.LBConfig.DataExpiration",  1000 * 60 * 60 * 24 * 5); // 5 days default
-        mDisableFallback = metaData.getBoolean("net.p_lucky.logbk.android.LBConfig.DisableFallback", true);
 
         String eventsEndpoint = metaData.getString("net.p_lucky.logbk.android.LBConfig.EventsEndpoint");
         if (null == eventsEndpoint) {
-            eventsEndpoint = "https://api.mixpanel.com/track?ip=1";
+            eventsEndpoint = "https://tracker.logbk.net/v1/track";
         }
         mEventsEndpoint = eventsEndpoint;
-
-        String eventsFallbackEndpoint = metaData.getString("net.p_lucky.logbk.android.LBConfig.EventsFallbackEndpoint");
-        if (null == eventsFallbackEndpoint) {
-            eventsFallbackEndpoint = "http://api.mixpanel.com/track?ip=1";
-        }
-        mEventsFallbackEndpoint = eventsFallbackEndpoint;
 
         if (DEBUG) {
             Log.d(LOGTAG,
@@ -53,10 +46,8 @@ public class LBConfig {
                 "    BulkUploadLimit " + getBulkUploadLimit() + "\n" +
                 "    FlushInterval " + getFlushInterval() + "\n" +
                 "    DataExpiration " + getDataExpiration() + "\n" +
-                "    DisableFallback " + getDisableFallback() + "\n" +
                 "    EnableDebugLogging " + DEBUG + "\n" +
-                "    EventsEndpoint " + getEventsEndpoint() + "\n" +
-                "    EventsFallbackEndpoint " + getEventsFallbackEndpoint() + "\n"
+                "    EventsEndpoint " + getEventsEndpoint() + "\n"
             );
         }
     }
@@ -76,18 +67,9 @@ public class LBConfig {
         return mDataExpiration;
     }
 
-    public boolean getDisableFallback() {
-        return mDisableFallback;
-    }
-
     // Preferred URL for tracking events
     public String getEventsEndpoint() {
         return mEventsEndpoint;
-    }
-
-    // Fallback URL for tracking events if post to preferred URL fails
-    public String getEventsFallbackEndpoint() {
-        return mEventsFallbackEndpoint;
     }
 
     ///////////////////////////////////////////////
@@ -110,9 +92,7 @@ public class LBConfig {
     private final int mBulkUploadLimit;
     private final int mFlushInterval;
     private final int mDataExpiration;
-    private final boolean mDisableFallback;
     private final String mEventsEndpoint;
-    private final String mEventsFallbackEndpoint;
 
     private static LBConfig sInstance;
     private static final Object sInstanceLock = new Object();

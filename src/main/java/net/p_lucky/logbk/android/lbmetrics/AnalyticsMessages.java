@@ -177,7 +177,6 @@ import android.util.Log;
             public AnalyticsMessageHandler(Looper looper) {
                 super(looper);
                 mDbAdapter = null;
-                mDisableFallback = mConfig.getDisableFallback();
                 mFlushInterval = mConfig.getFlushInterval();
                 mSystemInformation = new SystemInformation(mContext);
             }
@@ -252,12 +251,7 @@ import android.util.Log;
                 }
 
                 logAboutMessageToLogbook("Sending records to Logbook");
-                if (mDisableFallback) {
-                    sendData(dbAdapter, LBDbAdapter.Table.EVENTS, new String[]{ mConfig.getEventsEndpoint() });
-                 } else {
-                    sendData(dbAdapter, LBDbAdapter.Table.EVENTS,
-                             new String[]{ mConfig.getEventsEndpoint(), mConfig.getEventsFallbackEndpoint() });
-                }
+                sendData(dbAdapter, LBDbAdapter.Table.EVENTS, new String[]{ mConfig.getEventsEndpoint() });
             }
 
             private void sendData(LBDbAdapter dbAdapter, LBDbAdapter.Table table, String[] urls) {
@@ -391,7 +385,6 @@ import android.util.Log;
 
             private LBDbAdapter mDbAdapter;
             private long mFlushInterval; // XXX remove when associated deprecated APIs are removed
-            private boolean mDisableFallback; // XXX remove when associated deprecated APIs are removed
         }// AnalyticsMessageHandler
 
         private void updateFlushFrequency() {
