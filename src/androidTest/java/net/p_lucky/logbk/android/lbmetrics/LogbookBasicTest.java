@@ -340,10 +340,6 @@ public class LogbookBasicTest extends AndroidTestCase {
             public String getEventsEndpoint() {
                 return "EVENTS ENDPOINT";
             }
-
-            public boolean getDisableFallback() {
-                return false;
-            }
         };
 
         final List<String> cleanupCalls = new ArrayList<String>();
@@ -381,7 +377,7 @@ public class LogbookBasicTest extends AndroidTestCase {
         };
 
         try {
-            // Basic succeed on first, non-fallback url
+            // Basic succeed
             cleanupCalls.clear();
             flushResults.add(TestUtils.bytes("1\n"));
             metrics.track("Should Succeed", null);
@@ -391,27 +387,14 @@ public class LogbookBasicTest extends AndroidTestCase {
             assertEquals(null, performRequestCalls.poll(2, TimeUnit.SECONDS));
             assertEquals(1, cleanupCalls.size());
 
-            // Fallback test--first URL throws IOException
-            cleanupCalls.clear();
-            flushResults.add(new IOException());
-            flushResults.add(TestUtils.bytes("1\n"));
-            metrics.track("Should Succeed", null);
-            metrics.flush();
-            Thread.sleep(500);
-            assertEquals("Should Succeed", performRequestCalls.poll(2, TimeUnit.SECONDS));
-            assertEquals("Should Succeed", performRequestCalls.poll(2, TimeUnit.SECONDS));
-            assertEquals(1, cleanupCalls.size());
-
-            // Two IOExceptions -- assume temporary network failure, no cleanup should happen until
+            // One IOException -- assume temporary network failure, no cleanup should happen until
             // second flush
             cleanupCalls.clear();
             flushResults.add(new IOException());
-            flushResults.add(new IOException());
             flushResults.add(TestUtils.bytes("1\n"));
             metrics.track("Should Succeed", null);
             metrics.flush();
             Thread.sleep(500);
-            assertEquals("Should Succeed", performRequestCalls.poll(2, TimeUnit.SECONDS));
             assertEquals("Should Succeed", performRequestCalls.poll(2, TimeUnit.SECONDS));
             assertEquals(0, cleanupCalls.size());
             metrics.flush();
@@ -488,10 +471,8 @@ public class LogbookBasicTest extends AndroidTestCase {
         appInfo.metaData.putInt("net.p_lucky.logbk.android.LBConfig.BulkUploadLimit", 1);
         appInfo.metaData.putInt("net.p_lucky.logbk.android.LBConfig.FlushInterval", 2);
         appInfo.metaData.putInt("net.p_lucky.logbk.android.LBConfig.DataExpiration", 3);
-        appInfo.metaData.putBoolean("net.p_lucky.logbk.android.LBConfig.DisableFallback", true);
 
         appInfo.metaData.putString("net.p_lucky.logbk.android.LBConfig.EventsEndpoint", "EVENTS ENDPOINT");
-        appInfo.metaData.putString("net.p_lucky.logbk.android.LBConfig.EventsFallbackEndpoint", "EVENTS FALLBACK ENDPOINT");
 
         final PackageManager packageManager = new MockPackageManager() {
             @Override
@@ -518,9 +499,7 @@ public class LogbookBasicTest extends AndroidTestCase {
         assertEquals(1, testConfig.getBulkUploadLimit());
         assertEquals(2, testConfig.getFlushInterval());
         assertEquals(3, testConfig.getDataExpiration());
-        assertEquals(true, testConfig.getDisableFallback());
         assertEquals("EVENTS ENDPOINT", testConfig.getEventsEndpoint());
-        assertEquals("EVENTS FALLBACK ENDPOINT", testConfig.getEventsFallbackEndpoint());
     }
 
     public void testTrackAcquisition() {

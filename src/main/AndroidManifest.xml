@@ -23,13 +23,6 @@
     -->
 
     <application>
-        <!-- to support 2.2 (Froyo) and older devices, your application should allow fallback
-             to HTTP if modern HTTPS certificates aren't supported. -->
-        <!--
-        <meta-data android:name="net.p_lucky.logbk.android.LBConfig.DisableFallback"
-            android:value="false" />
-        -->
-
         <!-- Set the following option to true if you wish to see the debug output from the Logbook Android
              library. This may be useful in determining when track calls go out or in app notifications or
              surveys are fetched. The default value is false. -->
