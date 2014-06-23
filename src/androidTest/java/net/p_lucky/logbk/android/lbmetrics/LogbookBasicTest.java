@@ -462,7 +462,7 @@ public class LogbookBasicTest extends AndroidTestCase {
         JSONObject found = messages.poll(1, TimeUnit.SECONDS);
         assertNotNull(found);
         assertEquals(found.getString("event"), "test in thread");
-        assertTrue(found.getJSONObject("properties").has("$bluetooth_version"));
+        assertTrue(found.has("bluetoothVersion"));
     }
 
     public void testConfiguration() {

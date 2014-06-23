@@ -171,7 +171,7 @@ public class LogbookAPI {
 
             final long time = System.currentTimeMillis() / 1000;
             messageProps.put("time", time);
-            messageProps.put("distinct_id", getDistinctId());
+            messageProps.put("randUser", getDistinctId());
 
             if (null != properties) {
                 final Iterator<?> propIter = properties.keys();
