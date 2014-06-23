@@ -147,13 +147,13 @@ public class LogbookBasicTest extends AndroidTestCase {
             logbook.clearPreferences();
             assertFalse(explodingMessages.isDead());
 
-            logbook.track("event1", null);
+            logbook.track("event1");
             JSONObject found = messages.poll(1, TimeUnit.SECONDS);
             assertNotNull(found);
             Thread.sleep(1000);
             assertTrue(explodingMessages.isDead());
 
-            logbook.track("event2", null);
+            logbook.track("event2");
             JSONObject shouldntFind = messages.poll(1, TimeUnit.SECONDS);
             assertNull(shouldntFind);
             assertTrue(explodingMessages.isDead());
@@ -246,10 +246,10 @@ public class LogbookBasicTest extends AndroidTestCase {
 
         // Test filling up the message queue
         for (int i=0; i < mockConfig.getBulkUploadLimit() - 1; i++) {
-            metrics.track("frequent event", null);
+            metrics.track("frequent event");
         }
 
-        metrics.track("final event", null);
+        metrics.track("final event");
         String expectedJSONMessage = "<No message actually received>";
 
         try {
@@ -276,7 +276,7 @@ public class LogbookBasicTest extends AndroidTestCase {
             JSONArray bigFlush = new JSONArray(expectedJSONMessage);
             assertEquals(mockConfig.getBulkUploadLimit(), bigFlush.length());
 
-            metrics.track("next wave", null);
+            metrics.track("next wave");
             metrics.flush();
 
             String nextWaveTable = messages.poll(1, TimeUnit.SECONDS);
@@ -380,7 +380,7 @@ public class LogbookBasicTest extends AndroidTestCase {
             // Basic succeed
             cleanupCalls.clear();
             flushResults.add(TestUtils.bytes("1\n"));
-            metrics.track("Should Succeed", null);
+            metrics.track("Should Succeed");
             metrics.flush();
             Thread.sleep(500);
             assertEquals("Should Succeed", performRequestCalls.poll(2, TimeUnit.SECONDS));
@@ -392,7 +392,7 @@ public class LogbookBasicTest extends AndroidTestCase {
             cleanupCalls.clear();
             flushResults.add(new IOException());
             flushResults.add(TestUtils.bytes("1\n"));
-            metrics.track("Should Succeed", null);
+            metrics.track("Should Succeed");
             metrics.flush();
             Thread.sleep(500);
             assertEquals("Should Succeed", performRequestCalls.poll(2, TimeUnit.SECONDS));
@@ -406,7 +406,7 @@ public class LogbookBasicTest extends AndroidTestCase {
             // MalformedURLException -- should dump the events since this will probably never succeed
             cleanupCalls.clear();
             flushResults.add(new MalformedURLException());
-            metrics.track("Should Fail", null);
+            metrics.track("Should Fail");
             metrics.flush();
             Thread.sleep(500);
             assertEquals("Should Fail", performRequestCalls.poll(2, TimeUnit.SECONDS));
@@ -450,7 +450,7 @@ public class LogbookBasicTest extends AndroidTestCase {
                     }
                 };
                 logbook.clearPreferences();
-                logbook.track("test in thread", new JSONObject());
+                logbook.track("test in thread");
             }
         }
 
