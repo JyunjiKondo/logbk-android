@@ -188,8 +188,9 @@ public class LogbookBasicTest extends AndroidTestCase {
                     return TestUtils.bytes("{}");
                 }
 
-                assertEquals(nameValuePairs.get(0).getName(), "data");
-                final String decoded = Base64Coder.decodeString(nameValuePairs.get(0).getValue());
+                assertEquals(nameValuePairs.get(0).getName(), "code");
+                assertEquals(nameValuePairs.get(1).getName(), "data");
+                final String decoded = Base64Coder.decodeString(nameValuePairs.get(1).getValue());
 
                 try {
                     messages.put("SENT FLUSH " + endpointUrl);
@@ -316,8 +317,9 @@ public class LogbookBasicTest extends AndroidTestCase {
 
                 Object obj = flushResults.remove(0);
                 try {
-                    assertEquals(nameValuePairs.get(0).getName(), "data");
-                    final String jsonData = Base64Coder.decodeString(nameValuePairs.get(0).getValue());
+                    assertEquals(nameValuePairs.get(0).getName(), "code");
+                    assertEquals(nameValuePairs.get(1).getName(), "data");
+                    final String jsonData = Base64Coder.decodeString(nameValuePairs.get(1).getValue());
                     JSONArray msg = new JSONArray(jsonData);
                     JSONObject event = msg.getJSONObject(0);
                     performRequestCalls.put(event.getString("event"));
@@ -585,6 +587,12 @@ public class LogbookBasicTest extends AndroidTestCase {
         } catch (JSONException e) {
             fail("Expected a JSON object message and got something silly instead: " + expectedJSONMessage);
         }
+    }
+
+    public void testGetToken() {
+        LogbookAPI.getInstance(getContext(), "TOKEN1");
+        LogbookAPI.getInstance(getContext(), "TOKEN2");
+        assertEquals(LogbookAPI.getToken(), "TOKEN2");
     }
 
     enum Action {

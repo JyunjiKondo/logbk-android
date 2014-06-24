@@ -1,16 +1,15 @@
 package net.p_lucky.logbk.android.lbmetrics;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.Future;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Future;
 
 /**
  * Core class for interacting with Logbook Analytics.
@@ -150,6 +149,15 @@ public class LogbookAPI {
     }
 
     /**
+     * Get Logbook project token.
+     * 
+     * <p>getToken returns the token which is specified in last getInstance call.</p>
+     */
+    public static String getToken() {
+    	return mToken;
+    }
+
+    /**
      * Track an event.
      *
      * <p>Every call to track eventually results in a data point sent to Logbook. These data points
@@ -172,7 +180,7 @@ public class LogbookAPI {
             messageProps.put("randUser", getDistinctId());
 
             final AnalyticsMessages.EventDescription eventDescription =
-                    new AnalyticsMessages.EventDescription(eventName, messageProps, mToken);
+                    new AnalyticsMessages.EventDescription(eventName, messageProps);
             mMessages.eventsMessage(eventDescription);
         } catch (final JSONException e) {
             Log.e(LOGTAG, "Exception tracking event " + eventName, e);
@@ -301,7 +309,7 @@ public class LogbookAPI {
 
     private final Context mContext;
     private final AnalyticsMessages mMessages;
-    private final String mToken;
+    private static String mToken;
     private final PersistentIdentity mPersistentIdentity;
 
     // Maps each token to a singleton LogbookAPI instance

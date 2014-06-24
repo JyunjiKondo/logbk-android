@@ -108,10 +108,9 @@ import android.util.Log;
     ////////////////////////////////////////////////////
 
     static class EventDescription {
-        public EventDescription(String eventName, JSONObject properties, String token) {
+        public EventDescription(String eventName, JSONObject properties) {
             this.eventName = eventName;
             this.properties = properties;
-            this.token = token;
         }
 
         public String getEventName() {
@@ -122,13 +121,8 @@ import android.util.Log;
             return properties;
         }
 
-        public String getToken() {
-            return token;
-        }
-
         private final String eventName;
         private final JSONObject properties;
-        private final String token;
     }
 
     // Sends a message if and only if we are running with Logbook Message log enabled.
@@ -264,6 +258,7 @@ import android.util.Log;
 
                     final String encodedData = Base64Coder.encodeString(rawMessage);
                     final List<NameValuePair> params = new ArrayList<NameValuePair>(1);
+                    params.add(new BasicNameValuePair("code", LogbookAPI.getToken()));
                     params.add(new BasicNameValuePair("data", encodedData));
                     if (LBConfig.DEBUG) {
                         params.add(new BasicNameValuePair("verbose", "1"));
@@ -370,7 +365,6 @@ import android.util.Log;
             private JSONObject prepareEventObject(EventDescription eventDescription) throws JSONException {
                 final JSONObject eventObj = getDefaultEventProperties();
                 final JSONObject eventProperties = eventDescription.getProperties();
-                eventObj.put("token", eventDescription.getToken());
                 if (eventProperties != null) {
                     for (final Iterator<?> iter = eventProperties.keys(); iter.hasNext();) {
                         final String key = (String) iter.next();
