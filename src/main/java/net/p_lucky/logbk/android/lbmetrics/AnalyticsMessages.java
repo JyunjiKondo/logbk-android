@@ -108,10 +108,9 @@ import android.util.Log;
     ////////////////////////////////////////////////////
 
     static class EventDescription {
-        public EventDescription(String eventName, JSONObject properties, String token) {
+        public EventDescription(String eventName, JSONObject properties) {
             this.eventName = eventName;
             this.properties = properties;
-            this.token = token;
         }
 
         public String getEventName() {
@@ -122,13 +121,8 @@ import android.util.Log;
             return properties;
         }
 
-        public String getToken() {
-            return token;
-        }
-
         private final String eventName;
         private final JSONObject properties;
-        private final String token;
     }
 
     // Sends a message if and only if we are running with Logbook Message log enabled.
@@ -264,6 +258,7 @@ import android.util.Log;
 
                     final String encodedData = Base64Coder.encodeString(rawMessage);
                     final List<NameValuePair> params = new ArrayList<NameValuePair>(1);
+                    params.add(new BasicNameValuePair("code", LogbookAPI.getToken()));
                     params.add(new BasicNameValuePair("data", encodedData));
                     if (LBConfig.DEBUG) {
                         params.add(new BasicNameValuePair("verbose", "1"));
@@ -320,66 +315,63 @@ import android.util.Log;
                     throws JSONException {
                 final JSONObject ret = new JSONObject();
 
-                ret.put("mp_lib", "android");
-                ret.put("$lib_version", LBConfig.VERSION);
+                ret.put("libName", "logbk-android");
+                ret.put("libVersion", LBConfig.VERSION);
 
                 // For querying together with data from other libraries
-                ret.put("$os", "Android");
-                ret.put("$os_version", Build.VERSION.RELEASE == null ? "UNKNOWN" : Build.VERSION.RELEASE);
+                ret.put("os", "Android");
+                ret.put("osVersion", Build.VERSION.RELEASE == null ? "UNKNOWN" : Build.VERSION.RELEASE);
 
-                ret.put("$manufacturer", Build.MANUFACTURER == null ? "UNKNOWN" : Build.MANUFACTURER);
-                ret.put("$brand", Build.BRAND == null ? "UNKNOWN" : Build.BRAND);
-                ret.put("$model", Build.MODEL == null ? "UNKNOWN" : Build.MODEL);
+                ret.put("manufacturer", Build.MANUFACTURER == null ? "UNKNOWN" : Build.MANUFACTURER);
+                ret.put("brand", Build.BRAND == null ? "UNKNOWN" : Build.BRAND);
+                ret.put("model", Build.MODEL == null ? "UNKNOWN" : Build.MODEL);
 
                 final DisplayMetrics displayMetrics = mSystemInformation.getDisplayMetrics();
-                ret.put("$screen_dpi", displayMetrics.densityDpi);
-                ret.put("$screen_height", displayMetrics.heightPixels);
-                ret.put("$screen_width", displayMetrics.widthPixels);
+                ret.put("screenDpi", displayMetrics.densityDpi);
+                ret.put("screenHeight", displayMetrics.heightPixels);
+                ret.put("screenWidth", displayMetrics.widthPixels);
 
                 final String applicationVersionName = mSystemInformation.getAppVersionName();
                 if (null != applicationVersionName)
-                    ret.put("$app_version", applicationVersionName);
+                    ret.put("appVersion", applicationVersionName);
 
                 final Boolean hasNFC = mSystemInformation.hasNFC();
                 if (null != hasNFC)
-                    ret.put("$has_nfc", hasNFC.booleanValue());
+                    ret.put("hasNfc", hasNFC.booleanValue());
 
                 final Boolean hasTelephony = mSystemInformation.hasTelephony();
                 if (null != hasTelephony)
-                    ret.put("$has_telephone", hasTelephony.booleanValue());
+                    ret.put("hasTelephone", hasTelephony.booleanValue());
 
                 final String carrier = mSystemInformation.getCurrentNetworkOperator();
                 if (null != carrier)
-                    ret.put("$carrier", carrier);
+                    ret.put("carrier", carrier);
 
                 final Boolean isWifi = mSystemInformation.isWifiConnected();
                 if (null != isWifi)
-                    ret.put("$wifi", isWifi.booleanValue());
+                    ret.put("wifi", isWifi.booleanValue());
 
                 final Boolean isBluetoothEnabled = mSystemInformation.isBluetoothEnabled();
                 if (isBluetoothEnabled != null)
-                    ret.put("$bluetooth_enabled", isBluetoothEnabled);
+                    ret.put("bluetoothEnabled", isBluetoothEnabled);
 
                 final String bluetoothVersion = mSystemInformation.getBluetoothVersion();
                 if (bluetoothVersion != null)
-                    ret.put("$bluetooth_version", bluetoothVersion);
+                    ret.put("bluetoothVersion", bluetoothVersion);
 
                 return ret;
             }
 
             private JSONObject prepareEventObject(EventDescription eventDescription) throws JSONException {
-                final JSONObject eventObj = new JSONObject();
+                final JSONObject eventObj = getDefaultEventProperties();
                 final JSONObject eventProperties = eventDescription.getProperties();
-                final JSONObject sendProperties = getDefaultEventProperties();
-                sendProperties.put("token", eventDescription.getToken());
                 if (eventProperties != null) {
                     for (final Iterator<?> iter = eventProperties.keys(); iter.hasNext();) {
                         final String key = (String) iter.next();
-                        sendProperties.put(key, eventProperties.get(key));
+                        eventObj.put(key, eventProperties.get(key));
                     }
                 }
                 eventObj.put("event", eventDescription.getEventName());
-                eventObj.put("properties", sendProperties);
                 return eventObj;
             }
 

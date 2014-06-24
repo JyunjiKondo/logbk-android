@@ -147,13 +147,13 @@ public class LogbookBasicTest extends AndroidTestCase {
             logbook.clearPreferences();
             assertFalse(explodingMessages.isDead());
 
-            logbook.track("event1", null);
+            logbook.track("event1");
             JSONObject found = messages.poll(1, TimeUnit.SECONDS);
             assertNotNull(found);
             Thread.sleep(1000);
             assertTrue(explodingMessages.isDead());
 
-            logbook.track("event2", null);
+            logbook.track("event2");
             JSONObject shouldntFind = messages.poll(1, TimeUnit.SECONDS);
             assertNull(shouldntFind);
             assertTrue(explodingMessages.isDead());
@@ -188,8 +188,9 @@ public class LogbookBasicTest extends AndroidTestCase {
                     return TestUtils.bytes("{}");
                 }
 
-                assertEquals(nameValuePairs.get(0).getName(), "data");
-                final String decoded = Base64Coder.decodeString(nameValuePairs.get(0).getValue());
+                assertEquals(nameValuePairs.get(0).getName(), "code");
+                assertEquals(nameValuePairs.get(1).getName(), "data");
+                final String decoded = Base64Coder.decodeString(nameValuePairs.get(1).getValue());
 
                 try {
                     messages.put("SENT FLUSH " + endpointUrl);
@@ -246,10 +247,10 @@ public class LogbookBasicTest extends AndroidTestCase {
 
         // Test filling up the message queue
         for (int i=0; i < mockConfig.getBulkUploadLimit() - 1; i++) {
-            metrics.track("frequent event", null);
+            metrics.track("frequent event");
         }
 
-        metrics.track("final event", null);
+        metrics.track("final event");
         String expectedJSONMessage = "<No message actually received>";
 
         try {
@@ -276,7 +277,7 @@ public class LogbookBasicTest extends AndroidTestCase {
             JSONArray bigFlush = new JSONArray(expectedJSONMessage);
             assertEquals(mockConfig.getBulkUploadLimit(), bigFlush.length());
 
-            metrics.track("next wave", null);
+            metrics.track("next wave");
             metrics.flush();
 
             String nextWaveTable = messages.poll(1, TimeUnit.SECONDS);
@@ -316,8 +317,9 @@ public class LogbookBasicTest extends AndroidTestCase {
 
                 Object obj = flushResults.remove(0);
                 try {
-                    assertEquals(nameValuePairs.get(0).getName(), "data");
-                    final String jsonData = Base64Coder.decodeString(nameValuePairs.get(0).getValue());
+                    assertEquals(nameValuePairs.get(0).getName(), "code");
+                    assertEquals(nameValuePairs.get(1).getName(), "data");
+                    final String jsonData = Base64Coder.decodeString(nameValuePairs.get(1).getValue());
                     JSONArray msg = new JSONArray(jsonData);
                     JSONObject event = msg.getJSONObject(0);
                     performRequestCalls.put(event.getString("event"));
@@ -380,7 +382,7 @@ public class LogbookBasicTest extends AndroidTestCase {
             // Basic succeed
             cleanupCalls.clear();
             flushResults.add(TestUtils.bytes("1\n"));
-            metrics.track("Should Succeed", null);
+            metrics.track("Should Succeed");
             metrics.flush();
             Thread.sleep(500);
             assertEquals("Should Succeed", performRequestCalls.poll(2, TimeUnit.SECONDS));
@@ -392,7 +394,7 @@ public class LogbookBasicTest extends AndroidTestCase {
             cleanupCalls.clear();
             flushResults.add(new IOException());
             flushResults.add(TestUtils.bytes("1\n"));
-            metrics.track("Should Succeed", null);
+            metrics.track("Should Succeed");
             metrics.flush();
             Thread.sleep(500);
             assertEquals("Should Succeed", performRequestCalls.poll(2, TimeUnit.SECONDS));
@@ -406,7 +408,7 @@ public class LogbookBasicTest extends AndroidTestCase {
             // MalformedURLException -- should dump the events since this will probably never succeed
             cleanupCalls.clear();
             flushResults.add(new MalformedURLException());
-            metrics.track("Should Fail", null);
+            metrics.track("Should Fail");
             metrics.flush();
             Thread.sleep(500);
             assertEquals("Should Fail", performRequestCalls.poll(2, TimeUnit.SECONDS));
@@ -450,7 +452,7 @@ public class LogbookBasicTest extends AndroidTestCase {
                     }
                 };
                 logbook.clearPreferences();
-                logbook.track("test in thread", new JSONObject());
+                logbook.track("test in thread");
             }
         }
 
@@ -462,7 +464,7 @@ public class LogbookBasicTest extends AndroidTestCase {
         JSONObject found = messages.poll(1, TimeUnit.SECONDS);
         assertNotNull(found);
         assertEquals(found.getString("event"), "test in thread");
-        assertTrue(found.getJSONObject("properties").has("$bluetooth_version"));
+        assertTrue(found.has("bluetoothVersion"));
     }
 
     public void testConfiguration() {
@@ -585,6 +587,12 @@ public class LogbookBasicTest extends AndroidTestCase {
         } catch (JSONException e) {
             fail("Expected a JSON object message and got something silly instead: " + expectedJSONMessage);
         }
+    }
+
+    public void testGetToken() {
+        LogbookAPI.getInstance(getContext(), "TOKEN1");
+        LogbookAPI.getInstance(getContext(), "TOKEN2");
+        assertEquals(LogbookAPI.getToken(), "TOKEN2");
     }
 
     enum Action {
