@@ -1,0 +1,20 @@
+language: android
+env:
+  matrix:
+    - ANDROID_TARGET=android-19  ANDROID_ABI=armeabi-v7a
+  global:
+    - secure: "UiDQiYgOAi59A25gx98YIB1+TT2MguI/M5ri3HdKZF5MuZkMQ0H787If4AVWtXavNPVtu1GcBw/6FCudl/wMknO2T4dOeKWQzR/V89R2KiPUAV0Cx4yvA7nOaNnfTZ0xIHvSubuam80gP9tBnNELLN8wX0ilOrAVInR/gLSy+4w="
+    - secure: "CmjsGdNPjPuYhwTzsqmGI1SzzCMWlEBYH1O1aFfiJYZTjuzQyWsWUnsV9WdKN57FblAKRsv99e6XcWKW3iQKR+n3z+xx0qFr4KmVlPEecO3VwOVevb9w/xouKQbnlocwoMny+g6EArO8MAOAvjJ1ZXlT+ufNpNytWYbndnAccwY="
+    - secure: "S4hgkqzPzVNXvx3UdapqS9w1jgwFT8CGNeFfhf3InexgjK/7qaDqMYGFx2a4dECNc+MhGqtibONap4F1cE3pWTwWfVvfMNn7U5pNzOpetgJ7PY7bN7LcyGUuxArUWfpqHvFB1z8SxK31tIC79ot9iWbVp0hMlGtJWc5wK6DWAl4="
+    - secure: "dGG8CRF4mNn5YMpWB7++0ETHRFc5PhKk50+BuhlmzNYHw1mSVH5Y4yUhw+j1r3/nU0UvQlrt5zBGS8eNI+mC7nDkiOFyGYqlVxJBm6UMFnZare+3XOVX+XUcgiWgZSn4MF4VbXdfKADFojZaG1l6jYLk2mD48gfeLbeF2C75BCk="
+
+android:
+  components:
+    - build-tools-19.1.0
+
+before_install:
+  - echo no | android create avd --force -n test -t $ANDROID_TARGET --abi $ANDROID_ABI
+  - emulator -avd test -no-skin -no-audio -no-window &
+before_script:
+  - ./ci/wait_for_emulator
+  - adb shell input keyevent 82 &
