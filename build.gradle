@@ -18,7 +18,7 @@ android {
     defaultConfig {
         minSdkVersion 7
         targetSdkVersion 19
-        testPackageName "net.p_lucky.logbk.android.mpmetrics"
+        testPackageName "net.p_lucky.logbk.android.lbmetrics"
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
     }
 
