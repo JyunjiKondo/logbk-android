@@ -569,7 +569,7 @@ public class LogbookBasicTest extends AndroidTestCase {
         };
 
         try {
-            metrics.getClass().getMethod("track" + action.toString(), null).invoke(metrics, null);
+            metrics.getClass().getMethod("track" + action.toString(), (Class<?>[]) null).invoke(metrics, (Object[]) null);
         } catch (Exception e) {
             fail("Unexpected interruption");
         }
